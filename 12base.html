@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tusinaalijärjestelmän Laskin (Korjattu)</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #2a2a2a;
+            font-family: 'Segoe UI', 'Noto Sans', sans-serif;
+            color: white;
+            margin: 0;
+        }
+
+        .calculator {
+            border: 1px solid #444;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            background-color: #1e1e1e;
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+        }
+
+        .display {
+            background-color: #1a1a1a;
+            color: #fff;
+            font-size: 2.5em;
+            text-align: right;
+            padding: 20px;
+            border-bottom: 1px solid #444;
+            overflow-x: auto;
+            white-space: nowrap;
+            box-sizing: border-box;
+            min-height: 70px;
+            line-height: 1.5;
+        }
+        /* Scrollbar-tyylit näytölle */
+        .display::-webkit-scrollbar {
+            height: 5px;
+        }
+        .display::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        .display::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 5px;
+        }
+
+        .keys {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background-color: #333;
+        }
+
+        .key {
+            background-color: #404040;
+            border: none;
+            color: white;
+            padding: 18px;
+            font-size: 1.6em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            position: relative;
+        }
+        
+        .key:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #555;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.6em;
+            white-space: nowrap;
+            margin-bottom: 5px;
+            z-index: 10;
+        }
+
+        .key:active {
+            background-color: #6a6a6a;
+        }
+
+        .key.operator { background-color: #005f87; }
+        .key.operator:active { background-color: #007cb5; }
+
+        .key.function { background-color: #6d6d6d; }
+        .key.function:active { background-color: #8a8a8a; }
+        
+        .key.large-number { background-color: #4b0082; }
+        .key.large-number:active { background-color: #6a0dad; }
+
+        #key-equals {
+            grid-column: span 2;
+            background-color: #007acc;
+        }
+        #key-equals:active { background-color: #0099ff; }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <div class="display" id="display">ϙ</div>
+        <div class="keys">
+            <!-- Rivi 1 -->
+            <button class="key function" id="key-clear" title="Esc">C</button>
+            <button class="key large-number" data-value="ਨ" data-key="z" title="z (12³)">ਨ</button>
+            <button class="key large-number" data-value="Ѫ" data-key="x" title="x (12⁹)">Ѫ</button>
+            <button class="key operator" data-op="/" data-key="/" title="/">÷</button>
+            <!-- Rivi 2 -->
+            <button class="key" data-value="ப" data-key="i" title="i (7)">ப</button>
+            <button class="key" data-value="𑀬" data-key="o" title="o (8)">𑀬</button>
+            <button class="key" data-value="Ϸ" data-key="p" title="p (9)">Ϸ</button>
+            <button class="key operator" data-op="*" data-key="*" title="*">×</button>
+            <!-- Rivi 3 -->
+            <button class="key" data-value="𐤄" data-key="t" title="t (4)">𐤄</button>
+            <button class="key" data-value="¬" data-key="y" title="y (5)">¬‎</button>
+            <button class="key" data-value="𑀫" data-key="u" title="u (6)">𑀫</button>
+            <button class="key operator" data-op="-" data-key="-" title="-">−</button>
+            <!-- Rivi 4 -->
+            <button class="key" data-value="î" data-key="w" title="w (1)">î</button>
+            <button class="key" data-value="Ʌ" data-key="e" title="e (2)">Ʌ</button>
+            <button class="key" data-value="ሐ" data-key="r" title="r (3)">ሐ</button>
+            <button class="key operator" data-op="+" data-key="+" title="+">+</button>
+            <!-- Rivi 5 -->
+            <button class="key" data-value="ϙ" data-key="q" title="q (0)">ϙ</button>
+            <button class="key" data-value="𐅡" data-key="a" title="a (10)">𐅡</button>
+            <button class="key" data-value="𐆅" data-key="s" title="s (11)">𐆅</button>
+            <button class="key operator" id="key-equals" data-op="=" data-key="Enter" title="Enter">=</button>
+             <!-- Rivi 6 -->
+            <button class="key large-number" data-value="오" data-key="c" title="c (12²⁷)" style="grid-column: span 4;">오</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const display = document.getElementById('display');
+            const keys = document.querySelector('.keys');
+
+            const SYMBOLS = {
+                'ϙ': 0n, 'î': 1n, 'Ʌ': 2n, 'ሐ': 3n, '𐤄': 4n, '¬': 5n,
+                '𑀫': 6n, 'ப': 7n, '𑀬': 8n, 'Ϸ': 9n, '𐅡': 10n, '𐆅': 11n
+            };
+
+            const LARGE_NUMBERS = {
+                'ਨ': 12n ** 3n,
+                'Ѫ': 12n ** 9n,
+                '오': 12n ** 27n
+            };
+            
+            const VALUE_TO_SYMBOL = Object.fromEntries(Object.entries(SYMBOLS).map(([s, v]) => [v, s]));
+
+            const KEY_MAP = {
+                'q': 'ϙ', 'w': 'î', 'e': 'Ʌ', 'r': 'ሐ', 't': '𐤄', 'y': '¬',
+                'u': '𑀫', 'i': 'ப', 'o': '𑀬', 'p': 'Ϸ', 'a': '𐅡', 's': '𐆅',
+                'z': 'ਨ', 'x': 'Ѫ', 'c': '오',
+                '+': '+', '-': '-', '*': '*', '/': '/',
+                '=': '=', 'Enter': '=',
+                'Escape': 'C', 'Delete': 'C',
+                'Backspace': 'Backspace'
+            };
+            
+            let displayValue = 'ϙ';
+            let firstOperand = null;
+            let operator = null;
+            let waitingForSecondOperand = false;
+
+            const updateDisplay = () => display.textContent = displayValue;
+
+            const toDecimal = (dozenalStr) => {
+                return [...dozenalStr].reduce((acc, char) => {
+                    if (SYMBOLS[char] === undefined) return acc;
+                    return (acc * 12n) + SYMBOLS[char];
+                }, 0n);
+            };
+
+            const toDoz = (decimalBigInt) => {
+                if (decimalBigInt === 0n) return 'ϙ';
+                if (decimalBigInt < 0n) return '-' + toDoz(-decimalBigInt);
+
+                let result = '';
+                let num = decimalBigInt;
+                while (num > 0n) {
+                    const remainder = num % 12n;
+                    result = VALUE_TO_SYMBOL[remainder] + result;
+                    num = num / 12n;
+                }
+                return result;
+            };
+
+            const inputDigit = (digit) => {
+                if (waitingForSecondOperand) {
+                    displayValue = digit;
+                    waitingForSecondOperand = false;
+                } else {
+                    displayValue = (displayValue === 'ϙ') ? digit : displayValue + digit;
+                }
+            };
+            
+            const inputLargeNumber = (symbol) => {
+                 displayValue = toDoz(LARGE_NUMBERS[symbol]);
+                 waitingForSecondOperand = false;
+            };
+
+            const performCalculation = () => {
+                if (operator === null || firstOperand === null) return;
+                
+                const secondOperand = toDecimal(displayValue);
+                if (operator === '/' && secondOperand === 0n) {
+                    alert("Nollalla jako ei ole sallittu.");
+                    return 'error';
+                }
+
+                let result = 0n;
+                switch (operator) {
+                    case '+': result = firstOperand + secondOperand; break;
+                    case '-': result = firstOperand - secondOperand; break;
+                    case '*': result = firstOperand * secondOperand; break;
+                    case '/': result = firstOperand / secondOperand; break;
+                }
+                return result;
+            };
+
+            const handleOperator = (nextOperator) => {
+                const inputValue = toDecimal(displayValue);
+
+                if (operator && waitingForSecondOperand) {
+                    operator = nextOperator;
+                    return;
+                }
+
+                if (firstOperand === null) {
+                    firstOperand = inputValue;
+                } else if (operator) {
+                    const result = performCalculation();
+                    if (result === 'error') {
+                        resetCalculator();
+                        return;
+                    }
+                    displayValue = toDoz(result);
+                    firstOperand = result;
+                }
+                
+                waitingForSecondOperand = true;
+                operator = nextOperator;
+                updateDisplay();
+            };
+
+            const resetCalculator = () => {
+                displayValue = 'ϙ';
+                firstOperand = null;
+                operator = null;
+                waitingForSecondOperand = false;
+                updateDisplay();
+            };
+            
+            keys.addEventListener('click', (event) => {
+                const { target } = event;
+                if (!target.matches('button')) return;
+
+                if (target.dataset.value) { // Numeeriset ja suuret luvut
+                    if (LARGE_NUMBERS[target.dataset.value]) {
+                        inputLargeNumber(target.dataset.value);
+                    } else {
+                        inputDigit(target.dataset.value);
+                    }
+                } else if (target.dataset.op) { // Operaattorit
+                    if (target.dataset.op === '=') {
+                        const result = performCalculation();
+                        if (result === 'error') {
+                             resetCalculator();
+                             return;
+                        }
+                        if (result !== undefined) {
+                            displayValue = toDoz(result);
+                            operator = null;
+                            firstOperand = null; 
+                            waitingForSecondOperand = true;
+                        }
+                    } else {
+                        handleOperator(target.dataset.op);
+                    }
+                } else if (target.id === 'key-clear') {
+                    resetCalculator();
+                }
+                updateDisplay();
+            });
+            
+            document.addEventListener('keydown', (event) => {
+                if (event.key === ' ' || event.key === 'Enter') event.preventDefault();
+                
+                const action = KEY_MAP[event.key];
+                if (!action) return;
+
+                if (action === 'Backspace') {
+                    displayValue = displayValue.length > 1 ? displayValue.slice(0, -1) : 'ϙ';
+                    updateDisplay();
+                    return;
+                }
+                
+                const button = document.querySelector(`[data-key="${event.key}"]`) || 
+                               document.querySelector(`[data-value="${action}"]`) || 
+                               document.getElementById(`key-clear`);
+                
+                if (button) {
+                    button.click();
+                    button.style.transform = 'scale(0.95)';
+                    setTimeout(() => button.style.transform = '', 100);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
