@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laskin, Kello ja Ympyrä</title>
+    <title>Laskin, Kello ja Ympyrä (Korjattu)</title>
     <style>
         :root {
             --primary-bg: #2a2a2a;
@@ -12,7 +12,7 @@
             --key-bg: #404040;
             --key-active-bg: #6a6a6a;
             --operator-bg: #005f87;
-            --trig-bg: #006400; /* Uusi väri trig-napeille */
+            --trig-bg: #006400; 
             --large-num-bg: #4b0082;
             --text-color: white;
         }
@@ -59,7 +59,7 @@
             max-width: 480px;
             min-width: 320px;
             overflow: hidden;
-            min-height: 600px; 
+            min-height: 650px; /* Kasvatettu hieman tilaa kaavalle */
             display: flex;
             flex-direction: column;
         }
@@ -86,8 +86,12 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 1px;
             background-color: #333;
-            flex-grow: 1;
         }
+
+        .unit-circle-view .keys {
+             flex-grow: 0; /* Estetään kasvu, jotta kaava mahtuu */
+        }
+
 
         .key {
             background-color: var(--key-bg);
@@ -111,7 +115,7 @@
         .key.function { background-color: #6d6d6d; }
         .key.large-number { background-color: var(--large-num-bg); }
         .key.trig-key { background-color: var(--trig-bg); }
-        #key-equals { background-color: #007acc; }
+        #key-equals, #circle-equals { background-color: #007acc; }
 
         /* Piilotetaan näkymät oletuksena */
         .calculator, .clock-container, .unit-circle-view {
@@ -120,7 +124,7 @@
             height: 100%;
         }
         
-        #calculator { display: flex; } /* Laskin näkyy oletuksena */
+        #calculator { display: flex; flex-grow: 1; } /* Laskin näkyy oletuksena */
 
         /* Kellon erikoistyylit */
         .clock-container { justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
@@ -136,9 +140,17 @@
         #timezone-select { padding: 8px; background-color: var(--key-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; }
 
         /* Yksikköympyrän tyylit */
-        .unit-circle-view { padding: 10px; box-sizing: border-box; }
+        .unit-circle-view { padding: 10px; box-sizing: border-box; justify-content: space-between; }
         #unit-circle-canvas { width: 100%; max-height: 300px; background-color: #111; border-radius: 5px; }
         #circle-display { font-size: 1.8em; min-height: 60px; margin-top: 10px;}
+        .formula-display {
+            padding: 10px;
+            text-align: center;
+            font-size: 1.1em;
+            color: #ccc;
+            min-height: 1.5em; 
+            font-family: 'Courier New', Courier, monospace;
+        }
 
     </style>
 </head>
@@ -151,36 +163,36 @@
     </div>
 
     <div class="main-container">
-        <!-- LASKIN (ennallaan) -->
+        <!-- LASKIN -->
         <div class="calculator" id="calculator">
             <div class="display" id="display">ϙ</div>
-            <div class="keys">
-                <button class="key function" id="key-clear" title="Esc" style="grid-column: span 4;">C</button>
+            <div class="keys" id="calc-keys">
+                <button class="key function" data-calc-op="clear" title="Esc" style="grid-column: span 4;">C</button>
                 <button class="key large-number" data-value="ਨ" data-key="z" title="z (12³)">ਨ</button>
                 <button class="key large-number" data-value="Ѫ" data-key="x" title="x (12⁹)">Ѫ</button>
                 <button class="key large-number" data-value="오" data-key="c" title="c (12²⁷)">오</button>
-                <button class="key operator" data-op="*" data-key="*">×</button>
+                <button class="key operator" data-calc-op="*">×</button>
                 <button class="key" data-value="𐅡" data-key="a" title="a (10)">𐅡</button>
                 <button class="key" data-value="𐆅" data-key="s" title="s (11)">𐆅</button>
                 <button class="key" disabled></button>
-                <button class="key operator" data-op="/" data-key="/">÷</button>
+                <button class="key operator" data-calc-op="/">÷</button>
                 <button class="key" data-value="ப" data-key="i" title="i (7)">ப</button>
                 <button class="key" data-value="𑀬" data-key="o" title="o (8)">𑀬</button>
                 <button class="key" data-value="Ϸ" data-key="p" title="p (9)">Ϸ</button>
-                <button class="key operator" data-op="-" data-key="-">−</button>
+                <button class="key operator" data-calc-op="-">−</button>
                 <button class="key" data-value="𐤄" data-key="t" title="t (4)">𐤄</button>
                 <button class="key" data-value="¬" data-key="y" title="y (5)">¬‎</button>
                 <button class="key" data-value="𑀫" data-key="u" title="u (6)">𑀫</button>
-                <button class="key operator" data-op="+" data-key="+">+</button>
+                <button class="key operator" data-calc-op="+">+</button>
                 <button class="key" data-value="î" data-key="w" title="w (1)">î</button>
                 <button class="key" data-value="Ʌ" data-key="e" title="e (2)">Ʌ</button>
                 <button class="key" data-value="ሐ" data-key="r" title="r (3)">ሐ</button>
-                <button class="key operator" id="key-equals" data-op="=" data-key="Enter">=</button>
+                <button class="key operator" id="key-equals" data-calc-op="=" data-key="Enter">=</button>
                 <button class="key large-number" data-value="ϙ" data-key="q" title="q (0)" style="grid-column: span 4;">ϙ</button>
             </div>
         </div>
         
-        <!-- KELLO (ennallaan) -->
+        <!-- KELLO -->
         <div class="clock-container" id="clock-container">
             <div class="clock-face" id="clock-face">
                 <div id="year-display"></div>
@@ -194,34 +206,37 @@
             <select id="timezone-select"></select>
         </div>
 
-        <!-- YKSIKKÖYMPYRÄ (UUSI) -->
+        <!-- YKSIKKÖYMPYRÄ -->
         <div class="unit-circle-view" id="unit-circle-view">
             <canvas id="unit-circle-canvas" width="460" height="300"></canvas>
             <div class="display" id="circle-display">ϙ</div>
-            <div class="keys" id="circle-keys">
-                <!-- Rivi 1 -->
-                <button class="key trig-key" data-trig="sin">sin</button>
-                <button class="key" data-value="ப">ப</button>
-                <button class="key" data-value="𑀬">𑀬</button>
-                <button class="key" data-value="Ϸ">Ϸ</button>
-                <!-- Rivi 2 -->
-                <button class="key trig-key" data-trig="cos">cos</button>
-                <button class="key" data-value="𐤄">𐤄</button>
-                <button class="key" data-value="¬">¬‎</button>
-                <button class="key" data-value="𑀫">𑀫</button>
-                <!-- Rivi 3 -->
-                <button class="key trig-key" data-trig="tan">tan</button>
-                <button class="key" data-value="î">î</button>
-                <button class="key" data-value="Ʌ">Ʌ</button>
-                <button class="key" data-value="ሐ">ሐ</button>
-                <!-- Rivi 4 -->
-                <button class="key trig-key" data-trig="pi">π</button>
-                <button class="key" data-value="𐅡">𐅡</button>
-                <button class="key" data-value="𐆅">𐆅</button>
-                <button class="key" data-value="ϙ">ϙ</button>
-                <!-- Rivi 5 -->
-                <button class="key function" id="circle-clear" style="grid-column: span 2;">C</button>
-                <button class="key operator" id="circle-equals" style="grid-column: span 2;">=</button>
+            <div>
+                <div class="keys" id="circle-keys">
+                    <!-- Rivi 1 (MUUTETTU) -->
+                    <button class="key trig-key" data-trig="pi">π</button>
+                    <button class="key" data-circle-val="𐅡">𐅡</button>
+                    <button class="key" data-circle-val="𐆅">𐆅</button>
+                    <button class="key large-number" data-circle-val="ϙ">ϙ</button>
+                    <!-- Rivi 2 -->
+                    <button class="key trig-key" data-trig="sin">sin</button>
+                    <button class="key" data-circle-val="ப">ப</button>
+                    <button class="key" data-circle-val="𑀬">𑀬</button>
+                    <button class="key" data-circle-val="Ϸ">Ϸ</button>
+                    <!-- Rivi 3 -->
+                    <button class="key trig-key" data-trig="cos">cos</button>
+                    <button class="key" data-circle-val="𐤄">𐤄</button>
+                    <button class="key" data-circle-val="¬">¬‎</button>
+                    <button class="key" data-circle-val="𑀫">𑀫</button>
+                    <!-- Rivi 4 -->
+                    <button class="key trig-key" data-trig="tan">tan</button>
+                    <button class="key" data-circle-val="î">î</button>
+                    <button class="key" data-circle-val="Ʌ">Ʌ</button>
+                    <button class="key" data-circle-val="ሐ">ሐ</button>
+                    <!-- Rivi 5 -->
+                    <button class="key function" id="circle-clear" style="grid-column: span 2;">C</button>
+                    <button class="key operator" id="circle-equals" style="grid-column: span 2;">=</button>
+                </div>
+                <div class="formula-display" id="formula-display"></div>
             </div>
         </div>
     </div>
@@ -239,210 +254,131 @@
                 clock: document.getElementById('toggle-clock'),
                 circle: document.getElementById('toggle-circle')
             };
-            
-            const SYMBOLS = { 'ϙ': 0, 'î': 1, 'Ʌ': 2, 'ሐ': 3, '𐤄': 4, '¬': 5, '𑀫': 6, 'ப': 7, '𑀬': 8, 'Ϸ': 9, '𐅡': 10, '𐆅': 11 };
-            const SYMBOLS_INT = { 'ϙ': 0n, 'î': 1n, 'Ʌ': 2n, 'ሐ': 3n, '𐤄': 4n, '¬': 5n, '𑀫': 6n, 'ப': 7n, '𑀬': 8n, 'Ϸ': 9n, '𐅡': 10n, '𐆅': 11n };
-            const VALUE_TO_SYMBOL = Object.fromEntries(Object.entries(SYMBOLS).map(([s, v]) => [v, s]));
+
+            const SYMBOLS_BIGINT = { 'ϙ': 0n, 'î': 1n, 'Ʌ': 2n, 'ሐ': 3n, '𐤄': 4n, '¬': 5n, '𑀫': 6n, 'ப': 7n, '𑀬': 8n, 'Ϸ': 9n, '𐅡': 10n, '𐆅': 11n };
+            const SYMBOLS_DECIMAL = { 'ϙ': 0, 'î': 1, 'Ʌ': 2, 'ሐ': 3, '𐤄': 4, '¬': 5, '𑀫': 6, 'ப': 7, '𑀬': 8, 'Ϸ': 9, '𐅡': 10, '𐆅': 11 };
+            const VALUE_TO_SYMBOL_BIGINT = Object.fromEntries(Object.entries(SYMBOLS_BIGINT).map(([s, v]) => [v, s]));
+            const VALUE_TO_SYMBOL_DECIMAL = Object.fromEntries(Object.entries(SYMBOLS_DECIMAL).map(([s, v]) => [v, s]));
 
             // --- NÄKYMÄN VAIHTO ---
             function switchView(viewName) {
                 Object.values(views).forEach(v => v.style.display = 'none');
                 views[viewName].style.display = 'flex';
+                if (viewName === 'circle') {
+                    drawUnitCircle();
+                } else if (viewName === 'clock') {
+                    if (!clockFace.querySelector('.number')) {
+                        drawClockNumbers();
+                    }
+                    setClock();
+                }
             }
             toggleBtns.calc.addEventListener('click', () => switchView('calculator'));
             toggleBtns.clock.addEventListener('click', () => switchView('clock'));
-            toggleBtns.circle.addEventListener('click', () => {
-                switchView('circle');
-                drawUnitCircle(); // Piirrä ympyrä kun näkymä avataan
+            toggleBtns.circle.addEventListener('click', () => switchView('circle'));
+
+            // --- PERUSLASKIMEN LOGIIKKA ---
+            const calcDisplay = document.getElementById('display');
+            const calcKeys = document.getElementById('calc-keys');
+            let calcDisplayValue = 'ϙ', firstOperand = null, calcOperator = null, waitingForSecondOperand = false;
+            
+            const toDozBigInt = (decimalBigInt) => {
+                if (decimalBigInt === 0n) return 'ϙ';
+                if (decimalBigInt < 0n) return '-' + toDozBigInt(-decimalBigInt);
+                let result = ''; let num = decimalBigInt;
+                while (num > 0n) {
+                    result = VALUE_TO_SYMBOL_BIGINT[num % 12n] + result;
+                    num = num / 12n;
+                }
+                return result;
+            };
+            const toDecimalBigInt = (s) => [...s].reduce((a, c) => (SYMBOLS_BIGINT[c] !== undefined) ? (a * 12n) + SYMBOLS_BIGINT[c] : a, 0n);
+
+            function resetCalculator() { calcDisplayValue = 'ϙ'; firstOperand = null; calcOperator = null; waitingForSecondOperand = false; updateCalcDisplay(); };
+            function updateCalcDisplay() { calcDisplay.textContent = calcDisplayValue; };
+            
+            calcKeys.addEventListener('click', e => {
+                const { target } = e;
+                if (!target.matches('button:not(:disabled)')) return;
+                const value = target.dataset.value;
+                const op = target.dataset.calcOp;
+                const largeNum = {'ਨ': 12n ** 3n, 'Ѫ': 12n ** 9n, '오': 12n ** 27n};
+                if (value) {
+                    if (largeNum[value]) { calcDisplayValue = toDozBigInt(largeNum[value]); waitingForSecondOperand = false;
+                    } else { if (waitingForSecondOperand) { calcDisplayValue = value; waitingForSecondOperand = false; } else { calcDisplayValue = (calcDisplayValue === 'ϙ') ? value : calcDisplayValue + value; } }
+                } else if (op) {
+                    if (op === '=') {
+                        if (calcOperator && firstOperand !== null) {
+                            const secondOperand = toDecimalBigInt(calcDisplayValue);
+                            if (calcOperator === '/' && secondOperand === 0n) { alert("Nollalla jako ei ole sallittu."); resetCalculator(); return; }
+                            let result = 0n;
+                            switch (calcOperator) { case '+': result = firstOperand + secondOperand; break; case '-': result = firstOperand - secondOperand; break; case '*': result = firstOperand * secondOperand; break; case '/': result = firstOperand / secondOperand; break; }
+                            calcDisplayValue = toDozBigInt(result); firstOperand = null; calcOperator = null;
+                        }
+                    } else if (op === 'clear') { resetCalculator();
+                    } else { const inputValue = toDecimalBigInt(calcDisplayValue); if (calcOperator && waitingForSecondOperand) { calcOperator = op; return; } if (firstOperand === null) { firstOperand = inputValue; } waitingForSecondOperand = true; calcOperator = op; }
+                }
+                updateCalcDisplay();
             });
 
-            // --- PERUSLASKIMEN JA KELLON LOGIIKKA (lyhennetty selkeyden vuoksi) ---
-            // (Tähän tulisi aiemmin luotu koodi laskimelle ja kellolle, se on ennallaan)
-            const calcDisplay = document.getElementById('display');
-            document.getElementById('calculator').addEventListener('click', (e) => { /* ... laskimen logiikka ... */ });
-
+            // --- KELLON LOGIIKKA ---
+            const hourHand = document.getElementById('hour-hand'), minuteHand = document.getElementById('minute-hand'), secondHand = document.getElementById('second-hand'), monthHand = document.getElementById('month-hand'), yearDisplay = document.getElementById('year-display'), clockFace = document.getElementById('clock-face'), timezoneSelect = document.getElementById('timezone-select');
+            
+            function populateTimezoneSelect() { if (timezoneSelect.options.length > 0) return; const timezones = Intl.supportedValuesOf('timeZone'); const currentUserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone; timezones.forEach(tz => { const option = document.createElement('option'); option.value = tz; option.textContent = tz.replace(/_/g, ' '); if (tz === currentUserTimezone) { option.selected = true; } timezoneSelect.appendChild(option); }); }
+            function drawClockNumbers() { if (clockFace.querySelector('.number')) return; const dozenalNumerals = ['îϙ', 'î', 'Ʌ', 'ሐ', '𐤄', '¬', '𑀫', 'ப', '𑀬', 'Ϸ', '𐅡', '𐆅']; const radiusPercent = 42; dozenalNumerals.forEach((numeral, i) => { const clockNum = (i === 0) ? 12 : i; const angle = (clockNum / 12) * 2 * Math.PI - Math.PI / 2; const x = 50 + radiusPercent * Math.cos(angle); const y = 50 + radiusPercent * Math.sin(angle); const numElement = document.createElement('div'); numElement.className = 'number'; numElement.textContent = numeral; numElement.style.left = `${x}%`; numElement.style.top = `${y}%`; clockFace.appendChild(numElement); }); }
+            function setClock() { const selectedTz = timezoneSelect.value; const now = new Date(); const options = (part) => ({ timeZone: selectedTz, [part]: 'numeric' }); const hourOptions = { timeZone: selectedTz, hour: 'numeric', hourCycle: 'h23' }; const year = BigInt(new Intl.DateTimeFormat('en-US', options('year')).format(now)); const month = parseInt(new Intl.DateTimeFormat('en-US', options('month')).format(now), 10); const hours = parseInt(new Intl.DateTimeFormat('en-US', hourOptions).format(now), 10); const minutes = parseInt(new Intl.DateTimeFormat('en-US', options('minute')).format(now), 10); const seconds = parseInt(new Intl.DateTimeFormat('en-US', options('second')).format(now), 10); const secondsDegrees = (seconds / 60) * 360; const minutesDegrees = (minutes / 60) * 360 + (seconds/60) * 6; const hoursDegrees = ((hours % 12) / 12) * 360 + (minutes / 60) * 30; const monthDegrees = (month / 12) * 360; secondHand.style.transform = `rotate(${secondsDegrees}deg)`; minuteHand.style.transform = `rotate(${minutesDegrees}deg)`; hourHand.style.transform = `rotate(${hoursDegrees}deg)`; monthHand.style.transform = `rotate(${monthDegrees}deg)`; yearDisplay.textContent = toDozBigInt(year); }
+            timezoneSelect.addEventListener('change', setClock); populateTimezoneSelect(); drawClockNumbers(); setClock(); setInterval(setClock, 1000);
 
             // --- YKSIKKÖYMPYRÄN LOGIIKKA ---
-            const circleCanvas = document.getElementById('unit-circle-canvas');
-            const ctx = circleCanvas.getContext('2d');
-            const circleDisplay = document.getElementById('circle-display');
-            const circleKeys = document.getElementById('circle-keys');
+            const circleCanvas = document.getElementById('unit-circle-canvas'), ctx = circleCanvas.getContext('2d'), circleDisplay = document.getElementById('circle-display'), circleKeys = document.getElementById('circle-keys'), formulaDisplay = document.getElementById('formula-display');
+            let circleInput = 'ϙ', activeTrigFunc = null, waitingForCircleInput = false;
+            const FORMULAS = { sin: 'sin(θ) = vastainen / hypotenuusa', cos: 'cos(θ) = viereinen / hypotenuusa', tan: 'tan(θ) = vastainen / viereinen' };
 
-            let circleInput = 'ϙ';
-            let activeTrigFunc = null;
-            let waitingForCircleInput = false;
-
-            function updateCircleDisplay() {
-                if (waitingForCircleInput) {
-                    circleDisplay.textContent = `${activeTrigFunc}(${circleInput})`;
-                } else {
-                    circleDisplay.textContent = circleInput;
-                }
-            }
-
-            // Funktio desimaaliluvun muuntamiseksi tusinajärjestelmän merkkijonoksi
-            function decimalToDoz(decimal, precision = 8) {
-                if (decimal === 0) return 'ϙ';
-                let sign = decimal < 0 ? '-' : '';
-                decimal = Math.abs(decimal);
-
-                let integerPart = Math.floor(decimal);
-                let fractionalPart = decimal - integerPart;
-
-                let intDoz = '';
-                if (integerPart === 0) {
-                    intDoz = 'ϙ';
-                } else {
-                    while (integerPart > 0) {
-                        intDoz = VALUE_TO_SYMBOL[integerPart % 12] + intDoz;
-                        integerPart = Math.floor(integerPart / 12);
-                    }
-                }
-                
-                if (fractionalPart === 0) return sign + intDoz;
-
-                let fracDoz = '.';
-                for (let i = 0; i < precision; i++) {
-                    fractionalPart *= 12;
-                    let digit = Math.floor(fractionalPart);
-                    fracDoz += VALUE_TO_SYMBOL[digit];
-                    fractionalPart -= digit;
-                }
-                return sign + intDoz + fracDoz;
-            }
+            function updateCircleDisplay() { if (waitingForCircleInput) { circleDisplay.textContent = `${activeTrigFunc}(${circleInput})`; } else { circleDisplay.textContent = circleInput; } }
             
-            // Funktio tusinaluvun muuntamiseksi desimaaliluvuksi
-            function dozToDecimal(dozStr) {
-                 if (!dozStr) return 0;
-                 return [...dozStr].reduce((acc, char) => (SYMBOLS[char] !== undefined ? (acc * 12) + SYMBOLS[char] : acc), 0);
-            }
+            function decimalToDoz(decimal, precision = 8) { if (decimal === 0) return 'ϙ'; let sign = decimal < 0 ? '-' : ''; decimal = Math.abs(decimal); let integerPart = Math.floor(decimal); let fractionalPart = decimal - integerPart; let intDoz = integerPart === 0 ? 'ϙ' : ''; while (integerPart > 0) { intDoz = VALUE_TO_SYMBOL_DECIMAL[integerPart % 12] + intDoz; integerPart = Math.floor(integerPart / 12); } if (fractionalPart === 0) return sign + intDoz; let fracDoz = '.'; for (let i = 0; i < precision; i++) { fractionalPart *= 12; let digit = Math.floor(fractionalPart); fracDoz += VALUE_TO_SYMBOL_DECIMAL[digit]; fractionalPart -= digit; } return sign + intDoz + fracDoz; }
+            function dozToDecimal(dozStr) { if (!dozStr) return 0; return [...dozStr].reduce((acc, char) => (SYMBOLS_DECIMAL[char] !== undefined ? (acc * 12) + SYMBOLS_DECIMAL[char] : acc), 0); }
 
             function drawUnitCircle(angleRad = null, func = null) {
-                const w = circleCanvas.width;
-                const h = circleCanvas.height;
-                const cx = w / 2;
-                const cy = h / 2;
-                const radius = Math.min(w, h) / 2 - 30;
-
-                // Tyhjennä canvas
+                const w = circleCanvas.width, h = circleCanvas.height, cx = w / 2, cy = h / 2, radius = Math.min(w, h) / 2 - 30;
                 ctx.clearRect(0, 0, w, h);
-                
-                // Piirrä akselit
-                ctx.strokeStyle = '#666';
-                ctx.beginPath();
-                ctx.moveTo(0, cy); ctx.lineTo(w, cy); // X-akseli
-                ctx.moveTo(cx, 0); ctx.lineTo(cx, h); // Y-akseli
-                ctx.stroke();
-
-                // Piirrä ympyrä
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-                ctx.stroke();
-
-                // Piirrä numerot
-                ctx.fillStyle = '#fff';
-                ctx.font = '16px Segoe UI';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                ctx.strokeStyle = '#666'; ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2 * Math.PI); ctx.stroke();
+                ctx.fillStyle = '#fff'; ctx.font = '16px Segoe UI'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 const dozenalNumerals = ['îϙ', 'î', 'Ʌ', 'ሐ', '𐤄', '¬', '𑀫', 'ப', '𑀬', 'Ϸ', '𐅡', '𐆅'];
-                for (let i = 0; i < 12; i++) {
-                    const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
-                    const x = cx + (radius + 15) * Math.cos(angle);
-                    const y = cy + (radius + 15) * Math.sin(angle);
-                    ctx.fillText(dozenalNumerals[i], x, y);
-                }
-
-                // Jos annettu kulma ja funktio, piirrä ne
+                for (let i = 0; i < 12; i++) { const clockNum = (i === 0) ? 12 : i; const angle = (clockNum / 12) * 2 * Math.PI - Math.PI / 2; const x = cx + (radius + 15) * Math.cos(angle); const y = cy + (radius + 15) * Math.sin(angle); ctx.fillText(dozenalNumerals[i], x, y); }
                 if (angleRad !== null) {
-                    const x_p = cx + radius * Math.cos(angleRad);
-                    const y_p = cy - radius * Math.sin(angleRad); // Y-akseli on käänteinen canvaksella
-
-                    // Piirrä hypotenuusa (säde)
-                    ctx.strokeStyle = '#00aaff';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.moveTo(cx, cy);
-                    ctx.lineTo(x_p, y_p);
-                    ctx.stroke();
-
-                    if (func === 'sin') {
-                        ctx.strokeStyle = '#ff4444'; // Punainen sinille
-                        ctx.beginPath();
-                        ctx.moveTo(x_p, y_p);
-                        ctx.lineTo(x_p, cy);
-                        ctx.stroke();
-                    } else if (func === 'cos') {
-                        ctx.strokeStyle = '#44ff44'; // Vihreä cosinille
-                        ctx.beginPath();
-                        ctx.moveTo(x_p, y_p);
-                        ctx.lineTo(cx, y_p);
-                        ctx.stroke();
-                    } else if (func === 'tan') {
-                         ctx.strokeStyle = '#ffaa44'; // Oranssi tangentille
-                         ctx.beginPath();
-                         ctx.moveTo(x_p, y_p);
-                         // Tangentti on x=radius, jos cos(angle) > 0
-                         const tan_x = cx + radius / Math.cos(angleRad);
-                         ctx.lineTo(tan_x, cy);
-                         ctx.stroke();
-                    }
+                    const x_p = cx + radius * Math.cos(angleRad), y_p = cy - radius * Math.sin(angleRad);
+                    ctx.strokeStyle = '#00aaff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x_p, y_p); ctx.stroke();
+                    if (func === 'sin') { ctx.strokeStyle = '#ff4444'; ctx.beginPath(); ctx.moveTo(x_p, y_p); ctx.lineTo(x_p, cy); ctx.stroke(); } 
+                    else if (func === 'cos') { ctx.strokeStyle = '#44ff44'; ctx.beginPath(); ctx.moveTo(x_p, y_p); ctx.lineTo(cx, y_p); ctx.stroke(); }
                 }
             }
 
             circleKeys.addEventListener('click', (e) => {
-                const { target } = e;
-                if (!target.matches('button')) return;
-
-                if (target.dataset.value) { // Numeronäppäin
-                    if (!waitingForCircleInput) activeTrigFunc = null;
-                    if (circleInput === 'ϙ') {
-                        circleInput = target.dataset.value;
-                    } else {
-                        circleInput += target.dataset.value;
-                    }
-                } else if (target.dataset.trig) { // Funktio-näppäin
-                    const func = target.dataset.trig;
-                    if (func === 'pi') {
-                         circleInput = decimalToDoz(Math.PI);
-                         activeTrigFunc = null;
-                         waitingForCircleInput = false;
-                    } else {
-                        activeTrigFunc = func;
-                        circleInput = 'ϙ';
-                        waitingForCircleInput = true;
-                    }
-                } else if (target.id === 'circle-clear') {
-                    circleInput = 'ϙ';
-                    activeTrigFunc = null;
-                    waitingForCircleInput = false;
-                    drawUnitCircle();
-                } else if (target.id === 'circle-equals') {
+                const { target } = e; if (!target.matches('button')) return;
+                const circleVal = target.dataset.circleVal, trigFunc = target.dataset.trig;
+                if (circleVal) { if (!waitingForCircleInput) { activeTrigFunc = null; formulaDisplay.textContent = ''; } circleInput = (circleInput === 'ϙ') ? circleVal : circleInput + circleVal; } 
+                else if (trigFunc) {
+                    formulaDisplay.textContent = FORMULAS[trigFunc] || '';
+                    if (trigFunc === 'pi') { circleInput = decimalToDoz(Math.PI); activeTrigFunc = null; waitingForCircleInput = false; } 
+                    else { activeTrigFunc = trigFunc; circleInput = 'ϙ'; waitingForCircleInput = true; }
+                } 
+                else if (target.id === 'circle-clear') { circleInput = 'ϙ'; activeTrigFunc = null; waitingForCircleInput = false; drawUnitCircle(); formulaDisplay.textContent = ''; } 
+                else if (target.id === 'circle-equals') {
                     if (activeTrigFunc && waitingForCircleInput) {
-                        const inputDecimal = dozToDecimal(circleInput);
-                        const angleDegrees = (inputDecimal / 12) * 360;
-                        const angleRadians = angleDegrees * (Math.PI / 180);
-
+                        const inputDecimal = dozToDecimal(circleInput); const angleDegrees = (inputDecimal / 12) * 360; const angleRadians = angleDegrees * (Math.PI / 180);
                         let result;
-                        if (activeTrigFunc === 'tan' && Math.abs(Math.cos(angleRadians)) < 1e-10) {
-                            result = 'Määrittelemätön';
-                        } else {
-                            result = Math[activeTrigFunc](angleRadians);
-                            result = decimalToDoz(result);
-                        }
-                        
-                        circleInput = result;
-                        drawUnitCircle(angleRadians, activeTrigFunc);
-                        activeTrigFunc = null;
-                        waitingForCircleInput = false;
+                        if (activeTrigFunc === 'tan' && Math.abs(Math.cos(angleRadians)) < 1e-10) { result = 'Määrittelemätön'; }
+                        else { result = Math[activeTrigFunc](angleRadians); result = decimalToDoz(result); }
+                        circleInput = result; drawUnitCircle(angleRadians, activeTrigFunc); waitingForCircleInput = false;
                     }
                 }
                 updateCircleDisplay();
             });
 
-            // Alusta näkymä
-            switchView('calculator'); // Näytä laskin aluksi
+            // Alusta oletusnäkymä
+            switchView('calculator');
         });
     </script>
 </body>
