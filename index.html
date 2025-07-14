@@ -59,7 +59,7 @@
             max-width: 480px;
             min-width: 320px;
             overflow: hidden;
-            min-height: 650px; /* Kasvatettu hieman tilaa kaavalle */
+            min-height: 650px; 
             display: flex;
             flex-direction: column;
         }
@@ -89,9 +89,8 @@
         }
 
         .unit-circle-view .keys {
-             flex-grow: 0; /* Estetään kasvu, jotta kaava mahtuu */
+             flex-grow: 0; 
         }
-
 
         .key {
             background-color: var(--key-bg);
@@ -124,7 +123,7 @@
             height: 100%;
         }
         
-        #calculator { display: flex; flex-grow: 1; } /* Laskin näkyy oletuksena */
+        #calculator { display: flex; flex-grow: 1; } 
 
         /* Kellon erikoistyylit */
         .clock-container { justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
@@ -212,29 +211,25 @@
             <div class="display" id="circle-display">ϙ</div>
             <div>
                 <div class="keys" id="circle-keys">
-                    <!-- Rivi 1 (MUUTETTU) -->
                     <button class="key trig-key" data-trig="pi">π</button>
                     <button class="key" data-circle-val="𐅡">𐅡</button>
                     <button class="key" data-circle-val="𐆅">𐆅</button>
                     <button class="key large-number" data-circle-val="ϙ">ϙ</button>
-                    <!-- Rivi 2 -->
                     <button class="key trig-key" data-trig="sin">sin</button>
                     <button class="key" data-circle-val="ப">ப</button>
                     <button class="key" data-circle-val="𑀬">𑀬</button>
                     <button class="key" data-circle-val="Ϸ">Ϸ</button>
-                    <!-- Rivi 3 -->
                     <button class="key trig-key" data-trig="cos">cos</button>
                     <button class="key" data-circle-val="𐤄">𐤄</button>
                     <button class="key" data-circle-val="¬">¬‎</button>
                     <button class="key" data-circle-val="𑀫">𑀫</button>
-                    <!-- Rivi 4 -->
                     <button class="key trig-key" data-trig="tan">tan</button>
                     <button class="key" data-circle-val="î">î</button>
                     <button class="key" data-circle-val="Ʌ">Ʌ</button>
                     <button class="key" data-circle-val="ሐ">ሐ</button>
-                    <!-- Rivi 5 -->
-                    <button class="key function" id="circle-clear" style="grid-column: span 2;">C</button>
-                    <button class="key operator" id="circle-equals" style="grid-column: span 2;">=</button>
+                    <button class="key trig-key" data-trig="phi" style="grid-column: span 2;">φ</button>
+                    <button class="key function" id="circle-clear">C</button>
+                    <button class="key operator" id="circle-equals">=</button>
                 </div>
                 <div class="formula-display" id="formula-display"></div>
             </div>
@@ -281,49 +276,14 @@
             const calcDisplay = document.getElementById('display');
             const calcKeys = document.getElementById('calc-keys');
             let calcDisplayValue = 'ϙ', firstOperand = null, calcOperator = null, waitingForSecondOperand = false;
-            
-            const toDozBigInt = (decimalBigInt) => {
-                if (decimalBigInt === 0n) return 'ϙ';
-                if (decimalBigInt < 0n) return '-' + toDozBigInt(-decimalBigInt);
-                let result = ''; let num = decimalBigInt;
-                while (num > 0n) {
-                    result = VALUE_TO_SYMBOL_BIGINT[num % 12n] + result;
-                    num = num / 12n;
-                }
-                return result;
-            };
+            const toDozBigInt = (decimalBigInt) => { if (decimalBigInt === 0n) return 'ϙ'; if (decimalBigInt < 0n) return '-' + toDozBigInt(-decimalBigInt); let result = ''; let num = decimalBigInt; while (num > 0n) { result = VALUE_TO_SYMBOL_BIGINT[num % 12n] + result; num = num / 12n; } return result; };
             const toDecimalBigInt = (s) => [...s].reduce((a, c) => (SYMBOLS_BIGINT[c] !== undefined) ? (a * 12n) + SYMBOLS_BIGINT[c] : a, 0n);
-
             function resetCalculator() { calcDisplayValue = 'ϙ'; firstOperand = null; calcOperator = null; waitingForSecondOperand = false; updateCalcDisplay(); };
             function updateCalcDisplay() { calcDisplay.textContent = calcDisplayValue; };
-            
-            calcKeys.addEventListener('click', e => {
-                const { target } = e;
-                if (!target.matches('button:not(:disabled)')) return;
-                const value = target.dataset.value;
-                const op = target.dataset.calcOp;
-                const largeNum = {'ਨ': 12n ** 3n, 'Ѫ': 12n ** 9n, '오': 12n ** 27n};
-                if (value) {
-                    if (largeNum[value]) { calcDisplayValue = toDozBigInt(largeNum[value]); waitingForSecondOperand = false;
-                    } else { if (waitingForSecondOperand) { calcDisplayValue = value; waitingForSecondOperand = false; } else { calcDisplayValue = (calcDisplayValue === 'ϙ') ? value : calcDisplayValue + value; } }
-                } else if (op) {
-                    if (op === '=') {
-                        if (calcOperator && firstOperand !== null) {
-                            const secondOperand = toDecimalBigInt(calcDisplayValue);
-                            if (calcOperator === '/' && secondOperand === 0n) { alert("Nollalla jako ei ole sallittu."); resetCalculator(); return; }
-                            let result = 0n;
-                            switch (calcOperator) { case '+': result = firstOperand + secondOperand; break; case '-': result = firstOperand - secondOperand; break; case '*': result = firstOperand * secondOperand; break; case '/': result = firstOperand / secondOperand; break; }
-                            calcDisplayValue = toDozBigInt(result); firstOperand = null; calcOperator = null;
-                        }
-                    } else if (op === 'clear') { resetCalculator();
-                    } else { const inputValue = toDecimalBigInt(calcDisplayValue); if (calcOperator && waitingForSecondOperand) { calcOperator = op; return; } if (firstOperand === null) { firstOperand = inputValue; } waitingForSecondOperand = true; calcOperator = op; }
-                }
-                updateCalcDisplay();
-            });
+            calcKeys.addEventListener('click', e => { const { target } = e; if (!target.matches('button:not(:disabled)')) return; const value = target.dataset.value; const op = target.dataset.calcOp; const largeNum = {'ਨ': 12n ** 3n, 'Ѫ': 12n ** 9n, '오': 12n ** 27n}; if (value) { if (largeNum[value]) { calcDisplayValue = toDozBigInt(largeNum[value]); waitingForSecondOperand = false; } else { if (waitingForSecondOperand) { calcDisplayValue = value; waitingForSecondOperand = false; } else { calcDisplayValue = (calcDisplayValue === 'ϙ') ? value : calcDisplayValue + value; } } } else if (op) { if (op === '=') { if (calcOperator && firstOperand !== null) { const secondOperand = toDecimalBigInt(calcDisplayValue); if (calcOperator === '/' && secondOperand === 0n) { alert("Nollalla jako ei ole sallittu."); resetCalculator(); return; } let result = 0n; switch (calcOperator) { case '+': result = firstOperand + secondOperand; break; case '-': result = firstOperand - secondOperand; break; case '*': result = firstOperand * secondOperand; break; case '/': result = firstOperand / secondOperand; break; } calcDisplayValue = toDozBigInt(result); firstOperand = null; calcOperator = null; } } else if (op === 'clear') { resetCalculator(); } else { const inputValue = toDecimalBigInt(calcDisplayValue); if (calcOperator && waitingForSecondOperand) { calcOperator = op; return; } if (firstOperand === null) { firstOperand = inputValue; } waitingForSecondOperand = true; calcOperator = op; } } updateCalcDisplay(); });
 
             // --- KELLON LOGIIKKA ---
             const hourHand = document.getElementById('hour-hand'), minuteHand = document.getElementById('minute-hand'), secondHand = document.getElementById('second-hand'), monthHand = document.getElementById('month-hand'), yearDisplay = document.getElementById('year-display'), clockFace = document.getElementById('clock-face'), timezoneSelect = document.getElementById('timezone-select');
-            
             function populateTimezoneSelect() { if (timezoneSelect.options.length > 0) return; const timezones = Intl.supportedValuesOf('timeZone'); const currentUserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone; timezones.forEach(tz => { const option = document.createElement('option'); option.value = tz; option.textContent = tz.replace(/_/g, ' '); if (tz === currentUserTimezone) { option.selected = true; } timezoneSelect.appendChild(option); }); }
             function drawClockNumbers() { if (clockFace.querySelector('.number')) return; const dozenalNumerals = ['îϙ', 'î', 'Ʌ', 'ሐ', '𐤄', '¬', '𑀫', 'ப', '𑀬', 'Ϸ', '𐅡', '𐆅']; const radiusPercent = 42; dozenalNumerals.forEach((numeral, i) => { const clockNum = (i === 0) ? 12 : i; const angle = (clockNum / 12) * 2 * Math.PI - Math.PI / 2; const x = 50 + radiusPercent * Math.cos(angle); const y = 50 + radiusPercent * Math.sin(angle); const numElement = document.createElement('div'); numElement.className = 'number'; numElement.textContent = numeral; numElement.style.left = `${x}%`; numElement.style.top = `${y}%`; clockFace.appendChild(numElement); }); }
             function setClock() { const selectedTz = timezoneSelect.value; const now = new Date(); const options = (part) => ({ timeZone: selectedTz, [part]: 'numeric' }); const hourOptions = { timeZone: selectedTz, hour: 'numeric', hourCycle: 'h23' }; const year = BigInt(new Intl.DateTimeFormat('en-US', options('year')).format(now)); const month = parseInt(new Intl.DateTimeFormat('en-US', options('month')).format(now), 10); const hours = parseInt(new Intl.DateTimeFormat('en-US', hourOptions).format(now), 10); const minutes = parseInt(new Intl.DateTimeFormat('en-US', options('minute')).format(now), 10); const seconds = parseInt(new Intl.DateTimeFormat('en-US', options('second')).format(now), 10); const secondsDegrees = (seconds / 60) * 360; const minutesDegrees = (minutes / 60) * 360 + (seconds/60) * 6; const hoursDegrees = ((hours % 12) / 12) * 360 + (minutes / 60) * 30; const monthDegrees = (month / 12) * 360; secondHand.style.transform = `rotate(${secondsDegrees}deg)`; minuteHand.style.transform = `rotate(${minutesDegrees}deg)`; hourHand.style.transform = `rotate(${hoursDegrees}deg)`; monthHand.style.transform = `rotate(${monthDegrees}deg)`; yearDisplay.textContent = toDozBigInt(year); }
@@ -332,7 +292,7 @@
             // --- YKSIKKÖYMPYRÄN LOGIIKKA ---
             const circleCanvas = document.getElementById('unit-circle-canvas'), ctx = circleCanvas.getContext('2d'), circleDisplay = document.getElementById('circle-display'), circleKeys = document.getElementById('circle-keys'), formulaDisplay = document.getElementById('formula-display');
             let circleInput = 'ϙ', activeTrigFunc = null, waitingForCircleInput = false;
-            const FORMULAS = { sin: 'sin(θ) = vastainen / hypotenuusa', cos: 'cos(θ) = viereinen / hypotenuusa', tan: 'tan(θ) = vastainen / viereinen' };
+            const FORMULAS = { sin: 'sin(θ) = vastainen / hypotenuusa', cos: 'cos(θ) = viereinen / hypotenuusa', tan: 'tan(θ) = vastainen / viereinen', phi: 'φ = (1 + √5) / 2', pi: 'π = Kehä (C) / Halkaisija (d)' };
 
             function updateCircleDisplay() { if (waitingForCircleInput) { circleDisplay.textContent = `${activeTrigFunc}(${circleInput})`; } else { circleDisplay.textContent = circleInput; } }
             
@@ -347,9 +307,42 @@
                 ctx.fillStyle = '#fff'; ctx.font = '16px Segoe UI'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 const dozenalNumerals = ['îϙ', 'î', 'Ʌ', 'ሐ', '𐤄', '¬', '𑀫', 'ப', '𑀬', 'Ϸ', '𐅡', '𐆅'];
                 for (let i = 0; i < 12; i++) { const clockNum = (i === 0) ? 12 : i; const angle = (clockNum / 12) * 2 * Math.PI - Math.PI / 2; const x = cx + (radius + 15) * Math.cos(angle); const y = cy + (radius + 15) * Math.sin(angle); ctx.fillText(dozenalNumerals[i], x, y); }
-                if (angleRad !== null) {
+                
+                if (func === 'pi') {
+                    // Halkaisija
+                    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 3;
+                    ctx.beginPath(); ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy); ctx.stroke();
+                    // Kehä (MUUTETTU PUNAISKSI)
+                    ctx.strokeStyle = '#ff4444';
+                    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2 * Math.PI); ctx.stroke();
+                    // Tekstit
+                    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 16px Courier New'; ctx.textAlign = 'center';
+                    ctx.fillText('d', cx, cy + 15);
+                    ctx.textAlign = 'left';
+                    ctx.fillText('C', cx + radius + 5, cy);
+                } else if (angleRad !== null) {
                     const x_p = cx + radius * Math.cos(angleRad), y_p = cy - radius * Math.sin(angleRad);
+                    
+                    if (func === 'phi') {
+                        // Lähtöviiva
+                        ctx.strokeStyle = '#aaa'; 
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(cx + radius, cy); 
+                        ctx.stroke();
+
+                        // Kulman kaari (KORJATTU)
+                        ctx.strokeStyle = '#00aaff'; 
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        // Piirrä kaari vastapäivään (true) negatiivisella kulmalla
+                        ctx.arc(cx, cy, radius * 0.4, 0, -angleRad, true);
+                        ctx.stroke();
+                    }
+
                     ctx.strokeStyle = '#00aaff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x_p, y_p); ctx.stroke();
+                    
                     if (func === 'sin') { ctx.strokeStyle = '#ff4444'; ctx.beginPath(); ctx.moveTo(x_p, y_p); ctx.lineTo(x_p, cy); ctx.stroke(); } 
                     else if (func === 'cos') { ctx.strokeStyle = '#44ff44'; ctx.beginPath(); ctx.moveTo(x_p, y_p); ctx.lineTo(cx, y_p); ctx.stroke(); }
                 }
@@ -361,7 +354,8 @@
                 if (circleVal) { if (!waitingForCircleInput) { activeTrigFunc = null; formulaDisplay.textContent = ''; } circleInput = (circleInput === 'ϙ') ? circleVal : circleInput + circleVal; } 
                 else if (trigFunc) {
                     formulaDisplay.textContent = FORMULAS[trigFunc] || '';
-                    if (trigFunc === 'pi') { circleInput = decimalToDoz(Math.PI); activeTrigFunc = null; waitingForCircleInput = false; } 
+                    if (trigFunc === 'pi') { circleInput = decimalToDoz(Math.PI); activeTrigFunc = null; waitingForCircleInput = false; drawUnitCircle(null, 'pi'); } 
+                    else if (trigFunc === 'phi') { const phi = (1 + Math.sqrt(5)) / 2; circleInput = decimalToDoz(phi); activeTrigFunc = null; waitingForCircleInput = false; const angleForPhi = 137.5 * (Math.PI / 180); drawUnitCircle(angleForPhi, 'phi'); }
                     else { activeTrigFunc = trigFunc; circleInput = 'ϙ'; waitingForCircleInput = true; }
                 } 
                 else if (target.id === 'circle-clear') { circleInput = 'ϙ'; activeTrigFunc = null; waitingForCircleInput = false; drawUnitCircle(); formulaDisplay.textContent = ''; } 
