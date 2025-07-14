@@ -443,7 +443,7 @@
                 const day = now.getDate(); // 1-31
                 const daysInMonth = new Date(now.getFullYear(), month + 1, 0).getDate();
                 const monthProgress = day / daysInMonth;
-                const monthDegrees = ((month + monthProgress) / 12) * 360;
+                const monthDegrees = ((((month + 1) % 12) + monthProgress) / 12) * 360;
                 const secondsDegrees = (seconds / 60) * 360; const minutesDegrees = (minutes / 60) * 360 + (seconds/60) * 6; const hoursDegrees = ((hours % 12) / 12) * 360 + (minutes / 60) * 30;
                 if(hours >= 12){ hourHand.style.background = '#add8e6'; pmIndicator.textContent = 'îϙ+'; } else { hourHand.style.background = '#007acc'; pmIndicator.textContent = ''; }
                 if(hourHand) hourHand.style.transform = `rotate(${hoursDegrees}deg)`; if(minuteHand) minuteHand.style.transform = `rotate(${minutesDegrees}deg)`; if(secondHand) secondHand.style.transform = `rotate(${secondsDegrees}deg)`; if(monthHand) monthHand.style.transform = `rotate(${monthDegrees}deg)`; if(yearDisplay) yearDisplay.textContent = toDozBigInt(displayYear);
