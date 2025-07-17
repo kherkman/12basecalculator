@@ -1,8 +1,3 @@
-Selvä! Olen lisännyt akselien nimet "Re(z)" (reaaliosa), "Im(z)" (imaginaariosa) ja "Re(f(z))" (funktion reaaliosa) 3D-koordinaatistoon. Nimet on värikoodattu vastaamaan three.js:n oletusakseleita (X=punainen, Y=vihreä, Z=sininen), mikä parantaa luettavuutta.
-
-Muutokset on tehty vain sivun JavaScript-osioon. Tässä on päivitetty koodi:
-
-Generated html
 <!DOCTYPE html>
 <html lang="fi">
 <head>
@@ -222,10 +217,23 @@ Generated html
 
 
          /* Koordinaatiston tyylit */
-        .coordinate-system-view { padding: 10px; box-sizing: border-box; justify-content: flex-start; }
-        #coords-canvas { width: 100%; height: 400px; background-color: #111; border-radius: 5px; }
-        #coords-display { font-size: 1.8em; min-height: 60px; margin-top: 10px; text-align: center; }
-        .coordinate-system-view .keys { flex-grow: 0; }
+        .coordinate-system-view { padding: 10px; box-sizing: border-box; justify-content: flex-start; display: flex; flex-direction: column; flex-grow: 1; }
+        #coords-canvas { width: 100%; height: 350px; background-color: #111; border-radius: 5px; }
+        #coords-display { font-size: 1.8em; min-height: 40px; line-height: 40px; text-align: center; }
+        #coords-keys { flex-shrink: 0; }
+        .explanation-box {
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.8em;
+            background-color: #252525;
+            border-top: 1px solid var(--border-color);
+            overflow-y: auto;
+            flex-grow: 1;
+            max-height: 120px;
+        }
+        .explanation-box h4 { margin-top: 5px; margin-bottom: 3px; color: var(--operator-bg); }
+        .explanation-box p { margin-top: 0; margin-bottom: 8px; }
+
     </style>
 </head>
 <body>
@@ -339,17 +347,37 @@ Generated html
         <div class="view-container coordinate-system-view" id="coordinate-system-view">
             <canvas id="coords-canvas"></canvas>
             <div class="display" id="coords-display">Valitse funktio</div>
-            <div class="keys" id="coords-keys">
+            <div class="keys" id="coords-keys" style="grid-template-columns: repeat(5, 1fr);">
                  <button class="key power-key" data-power="2">x²</button>
                  <button class="key power-key" data-power="3">x³</button>
                  <button class="key power-key" data-power="4">x⁴</button>
                  <button class="key power-key" data-power="5">x⁵</button>
-                 <button class="key trig-key" data-func="sin">sin(x)</button>
-                 <button class="key trig-key" data-func="cos">cos(x)</button>
-                 <button class="key trig-key" data-func="tan">tan(x)</button>
-                 <button class="key function" data-func="log">log(x)</button>
-                 <button class="key function" data-func="exp">eˣ</button>
-                 <button class="key function" id="coords-clear" style="grid-column: span 3;">C</button>
+                 <button class="key function" data-func="sqrt">√z</button>
+                 
+                 <button class="key trig-key" data-func="sin">sin(z)</button>
+                 <button class="key trig-key" data-func="cos">cos(z)</button>
+                 <button class="key trig-key" data-func="tan">tan(z)</button>
+                 <button class="key trig-key" data-func="sinh">sinh(z)</button>
+                 <button class="key trig-key" data-func="sinc">sinc(z)</button>
+                 
+                 <button class="key function" data-func="log">log(z)</button>
+                 <button class="key function" data-func="exp">eᶻ</button>
+                 <button class="key function" data-func="gamma" title="Gamma-funktio">Γ(z)</button>
+                 <button class="key function" data-func="zeta" title="Riemannin zeeta-funktio">ζ(z)</button>
+                 <button class="key function" id="coords-clear" style="grid-column: span 5;">C</button>
+            </div>
+            <div class="explanation-box">
+                <h4>Tietoa kuvaajista</h4>
+                <p>Nämä 3D-kuvaajat esittävät, miten funktiot käyttäytyvät kompleksitasolla. Akselit ovat: <br>
+                - <b>X-akseli (punainen):</b> Syötteen reaaliosa, <b>Re(z)</b> <br>
+                - <b>Z-akseli (sininen):</b> Syötteen imaginaariosa, <b>Im(z)</b> <br>
+                - <b>Y-akseli (vihreä):</b> Funktion tuloksen reaaliosa, <b>Re(f(z))</b> (paitsi Gamma-funktiolla, josta näytetään itseisarvo |Γ(z)|).</p>
+                <h4>Uudet funktiot</h4>
+                <p><b>√z (Neliöjuuri):</b> Kompleksiluvun neliöjuuri. Kuvaaja näyttää spiraalimaiselta pinnalta, jossa on "leikkaus" negatiivisella reaaliakselilla.</p>
+                <p><b>sinh(z) (Hyperbolinen sini):</b> Tärkeä funktio fysiikassa ja tekniikassa, kuvaa mm. roikkuvia ketjuja. On jaksollinen imaginaariakselin suunnassa.</p>
+                <p><b>sinc(z) (Sinc-funktio):</b> Signaalinkäsittelyssä käytetty funktio (sin(z)/z), joka muodostaa vaimenevia, samankeskisiä aaltoja.</p>
+                <p><b>Γ(z) (Gamma-funktio):</b> Kertoman yleistys kompleksiluvuille. Sillä on navat (pystysuorat "piikit") negatiivisissa kokonaisluvuissa.</p>
+                <p><b>ζ(z) (Riemannin zeeta-funktio):</b> Yksi matematiikan kuuluisimmista funktioista, liittyy alkulukujen jakautumiseen ja ratkaisemattomaan Riemannin hypoteesiin.</p>
             </div>
         </div>
 
@@ -400,76 +428,26 @@ Generated html
             Object.keys(toggleBtns).forEach(key => { toggleBtns[key].addEventListener('click', () => switchView(key))});
 
             // --- LASKIN & ALINÄKYMÄT ---
-            const calcSubViews = {
-                calc: document.getElementById('calc-sub-view'),
-                converter: document.getElementById('converter-view'),
-                info: document.getElementById('info-view')
-            };
-            const calcSubNavBtns = {
-                calc: document.getElementById('show-calc-btn'),
-                converter: document.getElementById('show-converter-btn'),
-                info: document.getElementById('show-info-btn')
-            };
-            function switchCalcSubView(subViewName) {
-                Object.values(calcSubViews).forEach(v => v.style.display = 'none');
-                Object.values(calcSubNavBtns).forEach(b => b.classList.remove('active'));
-                calcSubViews[subViewName].style.display = 'flex';
-                calcSubNavBtns[subViewName].classList.add('active');
-            }
-            Object.keys(calcSubNavBtns).forEach(key => {
-                calcSubNavBtns[key].addEventListener('click', () => switchCalcSubView(key));
-            });
-            
-            // LASKIMEN LOGIIKKA
+            const calcSubViews = { calc: document.getElementById('calc-sub-view'), converter: document.getElementById('converter-view'), info: document.getElementById('info-view') };
+            const calcSubNavBtns = { calc: document.getElementById('show-calc-btn'), converter: document.getElementById('show-converter-btn'), info: document.getElementById('show-info-btn') };
+            function switchCalcSubView(subViewName) { Object.values(calcSubViews).forEach(v => v.style.display = 'none'); Object.values(calcSubNavBtns).forEach(b => b.classList.remove('active')); calcSubViews[subViewName].style.display = 'flex'; calcSubNavBtns[subViewName].classList.add('active'); }
+            Object.keys(calcSubNavBtns).forEach(key => { calcSubNavBtns[key].addEventListener('click', () => switchCalcSubView(key)); });
             const calcDisplay = document.getElementById('display'); const calcKeys = document.getElementById('calc-keys'); let calcDisplayValue = 'ϙ', firstOperand = null, calcOperator = null, waitingForSecondOperand = false; function resetCalculator() { calcDisplayValue = 'ϙ'; firstOperand = null; calcOperator = null; waitingForSecondOperand = false; updateCalcDisplay(); }; function updateCalcDisplay() { calcDisplay.textContent = calcDisplayValue; }; calcKeys.addEventListener('click', e => { const { target } = e; if (!target.matches('button:not(:disabled)')) return; const value = target.dataset.value; const op = target.dataset.calcOp; const largeNum = {'ਨ': 12n ** 3n, 'Ѫ': 12n ** 9n, '오': 12n ** 27n}; if (value) { if (largeNum[value]) { calcDisplayValue = toDozBigInt(largeNum[value]); waitingForSecondOperand = false; } else { if (waitingForSecondOperand) { calcDisplayValue = value; waitingForSecondOperand = false; } else { calcDisplayValue = (calcDisplayValue === 'ϙ') ? value : calcDisplayValue + value; } } } else if (op) { if (op === '=') { if (calcOperator && firstOperand !== null) { const secondOperand = toDecimalBigInt(calcDisplayValue); if (calcOperator === '/' && secondOperand === 0n) { alert("Nollalla jako ei ole sallittu."); resetCalculator(); return; } let result = 0n; switch (calcOperator) { case '+': result = firstOperand + secondOperand; break; case '-': result = firstOperand - secondOperand; break; case '*': result = firstOperand * secondOperand; break; case '/': result = firstOperand / secondOperand; break; } calcDisplayValue = toDozBigInt(result); firstOperand = null; calcOperator = null; } } else if (op === 'clear') { resetCalculator(); } else { const inputValue = toDecimalBigInt(calcDisplayValue); if (calcOperator && waitingForSecondOperand) { calcOperator = op; return; } if (firstOperand === null) { firstOperand = inputValue; } waitingForSecondOperand = true; calcOperator = op; } } updateCalcDisplay(); });
             
             // MUUNTIMEN LOGIIKKA
             const dozInput = document.getElementById('doz-input'); const decInput = document.getElementById('dec-input'); let isUpdating = false;
-            dozInput.addEventListener('input', () => {
-                if(isUpdating) return;
-                isUpdating = true;
-                const decValue = dozToDecimal(dozInput.value);
-                decInput.value = isNaN(decValue) ? "" : (decValue === 0 && dozInput.value !== 'ϙ' && dozInput.value !== '0' ? "" : decValue.toString());
-                isUpdating = false;
-            });
-            decInput.addEventListener('input', () => {
-                if(isUpdating) return;
-                isUpdating = true;
-                const num = parseFloat(decInput.value);
-                dozInput.value = isNaN(num) ? "" : decimalToDoz(num);
-                isUpdating = false;
-            });
-
+            dozInput.addEventListener('input', () => { if(isUpdating) return; isUpdating = true; const decValue = dozToDecimal(dozInput.value); decInput.value = isNaN(decValue) ? "" : (decValue === 0 && dozInput.value !== 'ϙ' && dozInput.value !== '0' ? "" : decValue.toString()); isUpdating = false; });
+            decInput.addEventListener('input', () => { if(isUpdating) return; isUpdating = true; const num = parseFloat(decInput.value); dozInput.value = isNaN(num) ? "" : decimalToDoz(num); isUpdating = false; });
 
             // --- KELLON LOGIIKKA ---
             const clockFace = document.getElementById('clock-face'); const timezoneSelect = document.getElementById('timezone-select'); let clockInterval = null;
-            function setClockHands() {
-                const hourHand = document.getElementById('hour-hand'); const minuteHand = document.getElementById('minute-hand'); const secondHand = document.getElementById('second-hand'); const monthHand = document.getElementById('month-hand'); const yearDisplay = document.getElementById('year-display'); const pmIndicator = document.getElementById('pm-indicator'); const selectedTz = timezoneSelect.value; const now = new Date();
-                const getLocalizedPart = (part, options = {}) => new Intl.DateTimeFormat('en-US', { timeZone: selectedTz, ...options }).format(now);
-                const displayYear = BigInt(getLocalizedPart('year', { year: 'numeric' }));
-                const hours = parseInt(getLocalizedPart('hour', { hour: 'numeric', hourCycle: 'h23' }), 10);
-                const minutes = parseInt(getLocalizedPart('minute', { minute: 'numeric' }), 10);
-                const seconds = parseInt(getLocalizedPart('second', { second: 'numeric' }), 10);
-                const month = now.getMonth(); // 0-11
-                const day = now.getDate(); // 1-31
-                const daysInMonth = new Date(now.getFullYear(), month + 1, 0).getDate();
-                const monthProgress = day / daysInMonth;
-                const monthDegrees = ((((month + 1) % 12) + monthProgress) / 12) * 360;
-                const secondsDegrees = (seconds / 60) * 360; const minutesDegrees = (minutes / 60) * 360 + (seconds/60) * 6; const hoursDegrees = ((hours % 12) / 12) * 360 + (minutes / 60) * 30;
-                if(hours >= 12){ hourHand.style.background = '#add8e6'; pmIndicator.textContent = 'îϙ+'; } else { hourHand.style.background = '#007acc'; pmIndicator.textContent = ''; }
-                if(hourHand) hourHand.style.transform = `rotate(${hoursDegrees}deg)`; if(minuteHand) minuteHand.style.transform = `rotate(${minutesDegrees}deg)`; if(secondHand) secondHand.style.transform = `rotate(${secondsDegrees}deg)`; if(monthHand) monthHand.style.transform = `rotate(${monthDegrees}deg)`; if(yearDisplay) yearDisplay.textContent = toDozBigInt(displayYear);
-            }
+            function setClockHands() { const hourHand = document.getElementById('hour-hand'); const minuteHand = document.getElementById('minute-hand'); const secondHand = document.getElementById('second-hand'); const monthHand = document.getElementById('month-hand'); const yearDisplay = document.getElementById('year-display'); const pmIndicator = document.getElementById('pm-indicator'); const selectedTz = timezoneSelect.value; const now = new Date(); const getLocalizedPart = (part, options = {}) => new Intl.DateTimeFormat('en-US', { timeZone: selectedTz, ...options }).format(now); const displayYear = BigInt(getLocalizedPart('year', { year: 'numeric' })); const hours = parseInt(getLocalizedPart('hour', { hour: 'numeric', hourCycle: 'h23' }), 10); const minutes = parseInt(getLocalizedPart('minute', { minute: 'numeric' }), 10); const seconds = parseInt(getLocalizedPart('second', { second: 'numeric' }), 10); const month = now.getMonth(); const day = now.getDate(); const daysInMonth = new Date(now.getFullYear(), month + 1, 0).getDate(); const monthProgress = day / daysInMonth; const monthDegrees = ((((month + 1) % 12) + monthProgress) / 12) * 360; const secondsDegrees = (seconds / 60) * 360; const minutesDegrees = (minutes / 60) * 360 + (seconds/60) * 6; const hoursDegrees = ((hours % 12) / 12) * 360 + (minutes / 60) * 30; if(hours >= 12){ hourHand.style.background = '#add8e6'; pmIndicator.textContent = 'îϙ+'; } else { hourHand.style.background = '#007acc'; pmIndicator.textContent = ''; } if(hourHand) hourHand.style.transform = `rotate(${hoursDegrees}deg)`; if(minuteHand) minuteHand.style.transform = `rotate(${minutesDegrees}deg)`; if(secondHand) secondHand.style.transform = `rotate(${secondsDegrees}deg)`; if(monthHand) monthHand.style.transform = `rotate(${monthDegrees}deg)`; if(yearDisplay) yearDisplay.textContent = toDozBigInt(displayYear); }
             function setupClock() { if (timezoneSelect.options.length === 0) { const timezones = Intl.supportedValuesOf('timeZone'); const currentUserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone; timezones.forEach(tz => { const option = document.createElement('option'); option.value = tz; option.textContent = tz.replace(/_/g, ' '); if (tz === currentUserTimezone) { option.selected = true; } timezoneSelect.appendChild(option); }); } if (!clockFace.querySelector('.number')) { const dozenalNumerals = ['ϙ', 'î', 'Ʌ', 'ሐ', '𐤄', '¬', '𑀫', 'ப', '𑀬', 'Ϸ', '𐅡', '𐆅']; const radiusPercent = 42; dozenalNumerals.forEach((numeral, i) => { const clockNum = (i === 0) ? 12 : i; const angle = (clockNum / 12) * 2 * Math.PI - Math.PI / 2; const x = 50 + radiusPercent * Math.cos(angle); const y = 50 + radiusPercent * Math.sin(angle); const numElement = document.createElement('div'); numElement.className = 'number'; numElement.textContent = numeral; numElement.style.left = `${x}%`; numElement.style.top = `${y}%`; clockFace.appendChild(numElement); }); } setClockHands(); if (clockInterval) clearInterval(clockInterval); clockInterval = setInterval(setClockHands, 1000); timezoneSelect.addEventListener('change', setClockHands); }
 
             // --- YKSIKKÖYMPYRÄ ---
-            const circleCanvas = document.getElementById('unit-circle-canvas'), ctx = circleCanvas.getContext('2d'), circleDisplay = document.getElementById('circle-display'), circleKeys = document.getElementById('circle-keys'), formulaDisplay = document.getElementById('formula-display');
-            let circleInput = 'ϙ', activeTrigFunc = null, waitingForCircleInput = false;
-            const FORMULAS = { sin: 'sin(θ) = vastainen / hypotenuusa', cos: 'cos(θ) = viereinen / hypotenuusa', tan: 'tan(θ) = vastainen / viereinen', phi: 'φ = (a + b) / a = a / b = (1 + √5) / 2', pi: 'π = Kehä (C) / Halkaisija (d)' };
+            const circleCanvas = document.getElementById('unit-circle-canvas'), ctx = circleCanvas.getContext('2d'), circleDisplay = document.getElementById('circle-display'), circleKeys = document.getElementById('circle-keys'), formulaDisplay = document.getElementById('formula-display'); let circleInput = 'ϙ', activeTrigFunc = null, waitingForCircleInput = false; const FORMULAS = { sin: 'sin(θ) = vastainen / hypotenuusa', cos: 'cos(θ) = viereinen / hypotenuusa', tan: 'tan(θ) = vastainen / viereinen', phi: 'φ = (a + b) / a = a / b = (1 + √5) / 2', pi: 'π = Kehä (C) / Halkaisija (d)' };
             function updateCircleDisplay() { if (waitingForCircleInput) { circleDisplay.textContent = `${activeTrigFunc}(${circleInput})`; } else { circleDisplay.textContent = circleInput; } }
-            function drawUnitCircle(angleRad = null, func = null) { const w = circleCanvas.width, h = circleCanvas.height, cx = w / 2, cy = h / 2, radius = Math.min(w, h) / 2 - 30; ctx.clearRect(0, 0, w, h); ctx.strokeStyle = '#666'; ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2 * Math.PI); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = '16px Segoe UI'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const dozenalNumerals = ['ϙ', 'î', 'Ʌ', 'ሐ', '𐤄', '¬', '𑀫', 'ப', '𑀬', 'Ϸ', '𐅡', '𐆅']; for (let i = 0; i < 12; i++) { const clockNum = (i === 0) ? 12 : i; const angle = -(clockNum / 12) * 2 * Math.PI + (Math.PI / 2); const x = cx + (radius + 15) * Math.cos(angle); const y = cy - (radius + 15) * Math.sin(angle); ctx.fillText(dozenalNumerals[i], x, y); } if (func === 'pi') { ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy); ctx.stroke(); ctx.strokeStyle = '#ff4444'; ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2 * Math.PI); ctx.stroke(); ctx.fillStyle = '#ffd700'; ctx.font = 'bold 16px Courier New'; ctx.textAlign = 'center'; ctx.fillText('d', cx, cy + 15); ctx.textAlign = 'left'; ctx.fillText('C', cx + radius + 5, cy); } 
-                else if (func === 'phi') { const startAngle = -Math.PI / 2; const endAngle = startAngle + angleRad; ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - radius); ctx.stroke(); ctx.strokeStyle = '#00aaff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + radius * Math.cos(endAngle), cy + radius * Math.sin(endAngle)); ctx.stroke(); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, radius * 0.4, startAngle, endAngle, false); ctx.stroke(); } 
-                else if (angleRad !== null) { const transformedAngle = -angleRad + (Math.PI / 2); const x_p = cx + radius * Math.cos(transformedAngle), y_p = cy - radius * Math.sin(transformedAngle); ctx.strokeStyle = '#00aaff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x_p, y_p); ctx.stroke(); if (func === 'sin') { ctx.strokeStyle = '#ff4444'; ctx.beginPath(); ctx.moveTo(x_p, y_p); ctx.lineTo(x_p, cy); ctx.stroke(); } else if (func === 'cos') { ctx.strokeStyle = '#44ff44'; ctx.beginPath(); ctx.moveTo(x_p, y_p); ctx.lineTo(cx, y_p); ctx.stroke(); } } 
-            }
+            function drawUnitCircle(angleRad = null, func = null) { const w = circleCanvas.width, h = circleCanvas.height, cx = w / 2, cy = h / 2, radius = Math.min(w, h) / 2 - 30; ctx.clearRect(0, 0, w, h); ctx.strokeStyle = '#666'; ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2 * Math.PI); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = '16px Segoe UI'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; const dozenalNumerals = ['ϙ', 'î', 'Ʌ', 'ሐ', '𐤄', '¬', '𑀫', 'ப', '𑀬', 'Ϸ', '𐅡', '𐆅']; for (let i = 0; i < 12; i++) { const clockNum = (i === 0) ? 12 : i; const angle = -(clockNum / 12) * 2 * Math.PI + (Math.PI / 2); const x = cx + (radius + 15) * Math.cos(angle); const y = cy - (radius + 15) * Math.sin(angle); ctx.fillText(dozenalNumerals[i], x, y); } if (func === 'pi') { ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy); ctx.stroke(); ctx.strokeStyle = '#ff4444'; ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2 * Math.PI); ctx.stroke(); ctx.fillStyle = '#ffd700'; ctx.font = 'bold 16px Courier New'; ctx.textAlign = 'center'; ctx.fillText('d', cx, cy + 15); ctx.textAlign = 'left'; ctx.fillText('C', cx + radius + 5, cy); } else if (func === 'phi') { const startAngle = -Math.PI / 2; const endAngle = startAngle + angleRad; ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - radius); ctx.stroke(); ctx.strokeStyle = '#00aaff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + radius * Math.cos(endAngle), cy + radius * Math.sin(endAngle)); ctx.stroke(); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, radius * 0.4, startAngle, endAngle, false); ctx.stroke(); } else if (angleRad !== null) { const transformedAngle = -angleRad + (Math.PI / 2); const x_p = cx + radius * Math.cos(transformedAngle), y_p = cy - radius * Math.sin(transformedAngle); ctx.strokeStyle = '#00aaff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x_p, y_p); ctx.stroke(); if (func === 'sin') { ctx.strokeStyle = '#ff4444'; ctx.beginPath(); ctx.moveTo(x_p, y_p); ctx.lineTo(x_p, cy); ctx.stroke(); } else if (func === 'cos') { ctx.strokeStyle = '#44ff44'; ctx.beginPath(); ctx.moveTo(x_p, y_p); ctx.lineTo(cx, y_p); ctx.stroke(); } } }
             circleKeys.addEventListener('click', (e) => { const { target } = e; if (!target.matches('button')) return; const circleVal = target.dataset.circleVal, trigFunc = target.dataset.trig; const inputDecimalForCircle = dozToDecimal(circleInput); if (circleVal) { if (!waitingForCircleInput) { activeTrigFunc = null; formulaDisplay.textContent = ''; } circleInput = (circleInput === 'ϙ') ? circleVal : circleInput + circleVal; } else if (trigFunc) { formulaDisplay.textContent = FORMULAS[trigFunc] || ''; if (trigFunc === 'pi') { circleInput = decimalToDoz(Math.PI, 8); activeTrigFunc = null; waitingForCircleInput = false; drawUnitCircle(null, 'pi'); } else if (trigFunc === 'phi') { const phi = (1 + Math.sqrt(5)) / 2; circleInput = decimalToDoz(phi, 8); activeTrigFunc = null; waitingForCircleInput = false; const angleForPhi = 137.5 * (Math.PI / 180); drawUnitCircle(angleForPhi, 'phi'); } else { activeTrigFunc = trigFunc; circleInput = 'ϙ'; waitingForCircleInput = true; } } else if (target.id === 'circle-clear') { circleInput = 'ϙ'; activeTrigFunc = null; waitingForCircleInput = false; drawUnitCircle(); formulaDisplay.textContent = ''; } else if (target.id === 'circle-equals') { if (activeTrigFunc && waitingForCircleInput) { const angleDegrees = (inputDecimalForCircle / 12) * 360; const angleRadians = angleDegrees * (Math.PI / 180); let result; if (activeTrigFunc === 'tan' && Math.abs(Math.cos(angleRadians)) < 1e-10) { result = 'Määrittelemätön'; } else { result = Math[activeTrigFunc](angleRadians); result = decimalToDoz(result, 8); } circleInput = result; drawUnitCircle(angleRadians, activeTrigFunc); waitingForCircleInput = false; } } updateCircleDisplay(); });
 
             // --- KERTOTAULU JA JAKOTAULU ---
@@ -482,75 +460,46 @@ Generated html
             const coordsKeys = document.getElementById('coords-keys');
             let scene, camera, renderer, controls, graphGroup;
 
-            // Apufunktio akselien nimien luomiseen
+            // Apufunktiot erikoisfunktioille
+            // Lanczos-approksimaatio Gamma-funktiolle (vain itseisarvo)
+            function logGamma(z) {
+                const g = 7;
+                const p = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+                if (z < 0.5) return Math.log(Math.PI / (Math.sin(Math.PI * z) * Math.exp(logGamma(1 - z))));
+                z -= 1;
+                let x = p[0];
+                for (let i = 1; i < g + 2; i++) x += p[i] / (z + i);
+                let t = z + g + 0.5;
+                return Math.log(Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x);
+            }
+            function absGamma(x, y) {
+                 const temp = (x - 0.5) * Math.log(x*x + y*y) - y * Math.atan2(y, x) + x - 0.5 * Math.log(2 * Math.PI);
+                 return Math.exp(temp);
+            }
+            
+            // Riemannin Zeeta-funktion reaaliosan approksimaatio summalla
+            function realZeta(x, y, terms = 50) {
+                let sum = 0;
+                for (let n = 1; n <= terms; n++) {
+                    const n_x = Math.pow(n, -x);
+                    const term = n_x * Math.cos(y * Math.log(n));
+                    sum += term;
+                }
+                return sum;
+            }
+
             function createAxisLabel(text, position, color, size = 48, scale = 5) {
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                const font = `${size}px Arial`;
-                context.font = font;
-                const metrics = context.measureText(text);
-                const textWidth = metrics.width;
-                canvas.width = textWidth + 10;
-                canvas.height = size + 10;
-
-                context.font = font;
-                context.fillStyle = color;
-                context.textAlign = 'center';
-                context.textBaseline = 'middle';
-                context.fillText(text, canvas.width / 2, canvas.height / 2);
-
-                const texture = new THREE.CanvasTexture(canvas);
-                const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
-                const sprite = new THREE.Sprite(material);
-                
-                sprite.position.copy(position);
-                sprite.scale.set(scale, scale * (canvas.height / canvas.width), 1.0);
-
-                return sprite;
+                const canvas = document.createElement('canvas'); const context = canvas.getContext('2d'); const font = `${size}px Arial`; context.font = font; const metrics = context.measureText(text); const textWidth = metrics.width; canvas.width = textWidth + 10; canvas.height = size + 10; context.font = font; context.fillStyle = color; context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText(text, canvas.width / 2, canvas.height / 2); const texture = new THREE.CanvasTexture(canvas); const material = new THREE.SpriteMaterial({ map: texture, depthTest: false }); const sprite = new THREE.Sprite(material); sprite.position.copy(position); sprite.scale.set(scale, scale * (canvas.height / canvas.width), 1.0); return sprite;
             }
 
             function setup3DScene() {
-                scene = new THREE.Scene();
-                graphGroup = new THREE.Group();
-                scene.add(graphGroup);
-                camera = new THREE.PerspectiveCamera(75, coordsCanvas.clientWidth / coordsCanvas.clientHeight, 0.1, 1000);
-                renderer = new THREE.WebGLRenderer({ canvas: coordsCanvas, antialias: true, alpha: true });
-                renderer.setSize(coordsCanvas.clientWidth, coordsCanvas.clientHeight);
-                renderer.setClearColor(0x000000, 0);
-                controls = new OrbitControls(camera, renderer.domElement);
-                
-                const axesHelper = new THREE.AxesHelper(15);
-                scene.add(axesHelper);
-
-                // Akselien nimien luonti ja sijoittelu
-                const axisLength = 15;
-                const labelScale = 7;
-                const xLabel = createAxisLabel("Re(z)", new THREE.Vector3(axisLength + 2.5, 0, 0), '#FF7777', 48, labelScale);
-                scene.add(xLabel);
-                const yLabel = createAxisLabel("Re(f(z))", new THREE.Vector3(0, axisLength + 2.5, 0), '#77FF77', 48, labelScale);
-                scene.add(yLabel);
-                const zLabel = createAxisLabel("Im(z)", new THREE.Vector3(0, 0, axisLength + 2.5), '#7777FF', 48, labelScale);
-                scene.add(zLabel);
-
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-                scene.add(ambientLight);
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
-                directionalLight.position.set(10, 20, 5);
-                scene.add(directionalLight);
-
-                animate3DScene();
+                scene = new THREE.Scene(); graphGroup = new THREE.Group(); scene.add(graphGroup); camera = new THREE.PerspectiveCamera(75, coordsCanvas.clientWidth / coordsCanvas.clientHeight, 0.1, 1000); renderer = new THREE.WebGLRenderer({ canvas: coordsCanvas, antialias: true, alpha: true }); renderer.setSize(coordsCanvas.clientWidth, coordsCanvas.clientHeight); renderer.setClearColor(0x000000, 0); controls = new OrbitControls(camera, renderer.domElement); const axesHelper = new THREE.AxesHelper(15); scene.add(axesHelper); const axisLength = 15; const labelScale = 7; const xLabel = createAxisLabel("Re(z)", new THREE.Vector3(axisLength + 2.5, 0, 0), '#FF7777', 48, labelScale); scene.add(xLabel); const yLabel = createAxisLabel("Re(f(z))", new THREE.Vector3(0, axisLength + 2.5, 0), '#77FF77', 48, labelScale); scene.add(yLabel); const zLabel = createAxisLabel("Im(z)", new THREE.Vector3(0, 0, axisLength + 2.5), '#7777FF', 48, labelScale); scene.add(zLabel); const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); scene.add(ambientLight); const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9); directionalLight.position.set(10, 20, 5); scene.add(directionalLight); animate3DScene();
             }
 
-            function animate3DScene() {
-                requestAnimationFrame(animate3DScene);
-                controls.update();
-                renderer.render(scene, camera);
-            }
+            function animate3DScene() { requestAnimationFrame(animate3DScene); controls.update(); renderer.render(scene, camera); }
 
             function plotGraph(funcType, power = null) {
-                graphGroup.clear();
-                let displayString = '';
-                let surfaceFunction = null;
+                graphGroup.clear(); let displayString = ''; let surfaceFunction = null;
 
                 if (funcType === 'power') {
                     switch (power) {
@@ -563,16 +512,21 @@ Generated html
                     switch (funcType) {
                         case 'sin': displayString = "y = Re(sin(z))"; surfaceFunction = (x, z) => Math.sin(x) * Math.cosh(z); break;
                         case 'cos': displayString = "y = Re(cos(z))"; surfaceFunction = (x, z) => Math.cos(x) * Math.cosh(z); break;
-                        case 'tan': displayString = "y = Re(tan(z))"; surfaceFunction = (x, z) => { const d = (Math.cos(2*x) + Math.cosh(2*z)); return d !== 0 ? Math.sin(2*x) / d : 0; }; break;
+                        case 'tan': displayString = "y = Re(tan(z))"; surfaceFunction = (x, z) => { const d = Math.cos(2*x) + Math.cosh(2*z); return d !== 0 ? Math.sin(2*x) / d : 0; }; break;
                         case 'log': displayString = "y = Re(log(z))"; surfaceFunction = (x, z) => Math.log(Math.sqrt((x * x) + (z * z))); break;
                         case 'exp': displayString = "y = Re(eᶻ)"; surfaceFunction = (x, z) => Math.exp(x) * Math.cos(z); break;
+                        case 'sqrt': displayString = "y = Re(√z)"; surfaceFunction = (x, z) => { const r = Math.sqrt(x*x + z*z); return Math.sqrt((r + x) / 2); }; break;
+                        case 'sinh': displayString = "y = Re(sinh(z))"; surfaceFunction = (x, z) => Math.sinh(x) * Math.cos(z); break;
+                        case 'sinc': displayString = "y = Re(sinc(z))"; surfaceFunction = (x, z) => { const r2 = x*x + z*z; if (r2 === 0) return 1; return (x*Math.sin(x)*Math.cosh(z) + z*Math.cos(x)*Math.sinh(z)) / r2; }; break;
+                        case 'gamma': displayString = "y = |Γ(z)|"; surfaceFunction = (x, z) => absGamma(x,z); break;
+                        case 'zeta': displayString = "y = Re(ζ(z))"; surfaceFunction = (x, z) => realZeta(x, z, 40); break;
                     }
                 }
 
                 if (!surfaceFunction) { coordsDisplay.textContent = 'Valitse funktio'; return; }
                 coordsDisplay.textContent = displayString;
 
-                const range = 5;
+                const range = funcType === 'zeta' ? 15 : 5;
                 const segments = 80;
                 
                 const geometry = new THREE.PlaneGeometry(range * 2, range * 2, segments, segments);
@@ -593,14 +547,11 @@ Generated html
                 positions.needsUpdate = true;
                 geometry.computeVertexNormals();
 
-                const material = new THREE.MeshStandardMaterial({
-                    color: 0x2196F3, side: THREE.DoubleSide, metalness: 0.3, roughness: 0.6,
-                });
-
+                const material = new THREE.MeshStandardMaterial({ color: 0x2196F3, side: THREE.DoubleSide, metalness: 0.3, roughness: 0.6 });
                 const surface = new THREE.Mesh(geometry, material);
                 graphGroup.add(surface);
 
-                const gridHelper = new THREE.GridHelper(range * 2, segments, 0x888888, 0x444444);
+                const gridHelper = new THREE.GridHelper(range * 2, range, 0x888888, 0x444444);
                 graphGroup.add(gridHelper);
 
                 camera.position.set(range * 1.5, range * 2, range * 2.5);
@@ -614,14 +565,9 @@ Generated html
                 const power = target.dataset.power;
                 const func = target.dataset.func;
 
-                if (power) {
-                    plotGraph('power', parseInt(power));
-                } else if (func) {
-                    plotGraph(func);
-                } else if (target.id === 'coords-clear') {
-                    graphGroup.clear();
-                    coordsDisplay.textContent = 'Valitse funktio';
-                }
+                if (power) { plotGraph('power', parseInt(power)); }
+                else if (func) { plotGraph(func); }
+                else if (target.id === 'coords-clear') { graphGroup.clear(); coordsDisplay.textContent = 'Valitse funktio'; }
             });
 
             // Alusta oletusnäkymä
@@ -629,4 +575,4 @@ Generated html
         });
     </script>
 </body>
-</html>```
+</html>
