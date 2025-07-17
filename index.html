@@ -1,3 +1,7 @@
+Selvä! Olen lisännyt akselien nimet "Re(z)" (reaaliosa), "Im(z)" (imaginaariosa) ja "Re(f(z))" (funktion reaaliosa) 3D-koordinaatistoon. Nimet on värikoodattu vastaamaan three.js:n oletusakseleita (X=punainen, Y=vihreä, Z=sininen), mikä parantaa luettavuutta.
+
+Muutokset on tehty vain sivun JavaScript-osioon. Tässä on päivitetty koodi:
+
 Generated html
 <!DOCTYPE html>
 <html lang="fi">
@@ -477,49 +481,133 @@ Generated html
             const coordsDisplay = document.getElementById('coords-display');
             const coordsKeys = document.getElementById('coords-keys');
             let scene, camera, renderer, controls, graphGroup;
-            function setup3DScene() { scene = new THREE.Scene(); graphGroup = new THREE.Group(); scene.add(graphGroup); camera = new THREE.PerspectiveCamera(75, coordsCanvas.clientWidth / coordsCanvas.clientHeight, 0.1, 1000); renderer = new THREE.WebGLRenderer({ canvas: coordsCanvas, antialias: true }); renderer.setSize(coordsCanvas.clientWidth, coordsCanvas.clientHeight); controls = new OrbitControls(camera, renderer.domElement); camera.position.set(10, 10, 20); controls.update(); const axesHelper = new THREE.AxesHelper(15); scene.add(axesHelper); animate3DScene(); }
-            function animate3DScene() { requestAnimationFrame(animate3DScene); controls.update(); renderer.render(scene, camera); }
+
+            // Apufunktio akselien nimien luomiseen
+            function createAxisLabel(text, position, color, size = 48, scale = 5) {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                const font = `${size}px Arial`;
+                context.font = font;
+                const metrics = context.measureText(text);
+                const textWidth = metrics.width;
+                canvas.width = textWidth + 10;
+                canvas.height = size + 10;
+
+                context.font = font;
+                context.fillStyle = color;
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+                const sprite = new THREE.Sprite(material);
+                
+                sprite.position.copy(position);
+                sprite.scale.set(scale, scale * (canvas.height / canvas.width), 1.0);
+
+                return sprite;
+            }
+
+            function setup3DScene() {
+                scene = new THREE.Scene();
+                graphGroup = new THREE.Group();
+                scene.add(graphGroup);
+                camera = new THREE.PerspectiveCamera(75, coordsCanvas.clientWidth / coordsCanvas.clientHeight, 0.1, 1000);
+                renderer = new THREE.WebGLRenderer({ canvas: coordsCanvas, antialias: true, alpha: true });
+                renderer.setSize(coordsCanvas.clientWidth, coordsCanvas.clientHeight);
+                renderer.setClearColor(0x000000, 0);
+                controls = new OrbitControls(camera, renderer.domElement);
+                
+                const axesHelper = new THREE.AxesHelper(15);
+                scene.add(axesHelper);
+
+                // Akselien nimien luonti ja sijoittelu
+                const axisLength = 15;
+                const labelScale = 7;
+                const xLabel = createAxisLabel("Re(z)", new THREE.Vector3(axisLength + 2.5, 0, 0), '#FF7777', 48, labelScale);
+                scene.add(xLabel);
+                const yLabel = createAxisLabel("Re(f(z))", new THREE.Vector3(0, axisLength + 2.5, 0), '#77FF77', 48, labelScale);
+                scene.add(yLabel);
+                const zLabel = createAxisLabel("Im(z)", new THREE.Vector3(0, 0, axisLength + 2.5), '#7777FF', 48, labelScale);
+                scene.add(zLabel);
+
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+                directionalLight.position.set(10, 20, 5);
+                scene.add(directionalLight);
+
+                animate3DScene();
+            }
+
+            function animate3DScene() {
+                requestAnimationFrame(animate3DScene);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
             function plotGraph(funcType, power = null) {
                 graphGroup.clear();
-                const range = 12;
-                const segments = 200;
                 let displayString = '';
-                let currentPoints = [];
+                let surfaceFunction = null;
 
-                for (let i = 0; i <= segments; i++) {
-                    const x = (i / segments) * (range * 2) - range;
-                    let y;
-
-                    switch (funcType) {
-                        case 'power': displayString = `y = x^${power}`; y = Math.pow(x, power); break;
-                        case 'sin': displayString = 'y = sin(x)'; y = Math.sin(x); break;
-                        case 'cos': displayString = 'y = cos(x)'; y = Math.cos(x); break;
-                        case 'tan': displayString = 'y = tan(x)'; y = Math.abs(Math.cos(x)) < 0.05 ? NaN : Math.tan(x); break;
-                        case 'log': displayString = 'y = log(x)'; y = x > 0 ? Math.log(x) : NaN; break;
-                        case 'exp': displayString = 'y = e^x'; y = Math.exp(x); break;
-                        default: y = NaN;
+                if (funcType === 'power') {
+                    switch (power) {
+                        case 2: displayString = "y = Re(z²)"; surfaceFunction = (x, z) => (x * x) - (z * z); break;
+                        case 3: displayString = "y = Re(z³)"; surfaceFunction = (x, z) => (x * x * x) - (3 * x * z * z); break;
+                        case 4: displayString = "y = Re(z⁴)"; surfaceFunction = (x, z) => Math.pow(x, 4) - (6 * x * x * z * z) + Math.pow(z, 4); break;
+                        case 5: displayString = "y = Re(z⁵)"; surfaceFunction = (x, z) => Math.pow(x, 5) - (10 * Math.pow(x, 3) * z * z) + (5 * x * Math.pow(z, 4)); break;
                     }
-
-                    if (isNaN(y) || Math.abs(y) > 50) {
-                        if (currentPoints.length > 1) {
-                            const geometry = new THREE.BufferGeometry().setFromPoints(currentPoints);
-                            const material = new THREE.LineBasicMaterial({ color: 0xff00ff });
-                            graphGroup.add(new THREE.Line(geometry, material));
-                        }
-                        currentPoints = [];
-                    } else {
-                        currentPoints.push(new THREE.Vector3(x, y, 0));
+                } else {
+                    switch (funcType) {
+                        case 'sin': displayString = "y = Re(sin(z))"; surfaceFunction = (x, z) => Math.sin(x) * Math.cosh(z); break;
+                        case 'cos': displayString = "y = Re(cos(z))"; surfaceFunction = (x, z) => Math.cos(x) * Math.cosh(z); break;
+                        case 'tan': displayString = "y = Re(tan(z))"; surfaceFunction = (x, z) => { const d = (Math.cos(2*x) + Math.cosh(2*z)); return d !== 0 ? Math.sin(2*x) / d : 0; }; break;
+                        case 'log': displayString = "y = Re(log(z))"; surfaceFunction = (x, z) => Math.log(Math.sqrt((x * x) + (z * z))); break;
+                        case 'exp': displayString = "y = Re(eᶻ)"; surfaceFunction = (x, z) => Math.exp(x) * Math.cos(z); break;
                     }
                 }
 
-                if (currentPoints.length > 1) {
-                    const geometry = new THREE.BufferGeometry().setFromPoints(currentPoints);
-                    const material = new THREE.LineBasicMaterial({ color: 0xff00ff });
-                    graphGroup.add(new THREE.Line(geometry, material));
+                if (!surfaceFunction) { coordsDisplay.textContent = 'Valitse funktio'; return; }
+                coordsDisplay.textContent = displayString;
+
+                const range = 5;
+                const segments = 80;
+                
+                const geometry = new THREE.PlaneGeometry(range * 2, range * 2, segments, segments);
+                geometry.rotateX(-Math.PI / 2);
+
+                const positions = geometry.attributes.position;
+                const yClamp = 15;
+
+                for (let i = 0; i < positions.count; i++) {
+                    const x = positions.getX(i);
+                    const z = positions.getZ(i);
+                    let y = surfaceFunction(x, z);
+                    
+                    y = isNaN(y) || !isFinite(y) ? 0 : Math.max(-yClamp, Math.min(yClamp, y)); 
+                    positions.setY(i, y);
                 }
                 
-                coordsDisplay.textContent = displayString;
+                positions.needsUpdate = true;
+                geometry.computeVertexNormals();
+
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x2196F3, side: THREE.DoubleSide, metalness: 0.3, roughness: 0.6,
+                });
+
+                const surface = new THREE.Mesh(geometry, material);
+                graphGroup.add(surface);
+
+                const gridHelper = new THREE.GridHelper(range * 2, segments, 0x888888, 0x444444);
+                graphGroup.add(gridHelper);
+
+                camera.position.set(range * 1.5, range * 2, range * 2.5);
+                controls.target.set(0, 0, 0);
+                controls.update();
             }
+            
             coordsKeys.addEventListener('click', e => {
                 const { target } = e;
                 if (!target.matches('button:not(:disabled)')) return;
@@ -541,4 +629,4 @@ Generated html
         });
     </script>
 </body>
-</html>
+</html>```
