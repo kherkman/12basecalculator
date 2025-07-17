@@ -115,6 +115,14 @@
         .key.trig-key { background-color: var(--trig-bg); }
         #key-equals, #circle-equals, #coords-equals { background-color: #007acc; }
 
+        /* UUSI LISÄYS POTENSSIMERKEILLE */
+        .exponent {
+            position: relative;
+            font-size: 0.65em;
+            top: -0.6em;
+            margin-left: 2px;
+        }
+
         /* Piilotetaan näkymät oletuksena */
         .view-container {
             display: none;
@@ -218,9 +226,9 @@
 
          /* Koordinaatiston tyylit */
         .coordinate-system-view { padding: 10px; box-sizing: border-box; justify-content: flex-start; display: flex; flex-direction: column; flex-grow: 1; }
-        #coords-canvas { width: 100%; height: 350px; background-color: #111; border-radius: 5px; }
+        #coords-canvas { width: 100%; height: 320px; background-color: #111; border-radius: 5px; }
         #coords-display { font-size: 1.8em; min-height: 40px; line-height: 40px; text-align: center; }
-        #coords-keys { flex-shrink: 0; }
+        #coords-keys { flex-shrink: 0; flex-grow: 0; }
         .explanation-box {
             padding: 10px;
             margin-top: 10px;
@@ -229,7 +237,7 @@
             border-top: 1px solid var(--border-color);
             overflow-y: auto;
             flex-grow: 1;
-            max-height: 120px;
+            max-height: 100px;
         }
         .explanation-box h4 { margin-top: 5px; margin-bottom: 3px; color: var(--operator-bg); }
         .explanation-box p { margin-top: 0; margin-bottom: 8px; }
@@ -347,24 +355,29 @@
         <div class="view-container coordinate-system-view" id="coordinate-system-view">
             <canvas id="coords-canvas"></canvas>
             <div class="display" id="coords-display">Valitse funktio</div>
-            <div class="keys" id="coords-keys" style="grid-template-columns: repeat(5, 1fr);">
-                 <button class="key power-key" data-power="2">x²</button>
-                 <button class="key power-key" data-power="3">x³</button>
-                 <button class="key power-key" data-power="4">x⁴</button>
-                 <button class="key power-key" data-power="5">x⁵</button>
-                 <button class="key function" data-func="sqrt">√z</button>
+            <div class="keys" id="coords-keys">
+                 <!-- MUUTETUT NAPIT -->
+                 <button class="key power-key" data-power="2">x<span class="exponent">Ʌ</span></button>
+                 <button class="key power-key" data-power="3">x<span class="exponent">ሐ</span></button>
+                 <button class="key power-key" data-power="4">x<span class="exponent">𐤄</span></button>
+                 <button class="key power-key" data-power="5">x<span class="exponent">¬</span></button>
                  
+                 <button class="key function" data-func="sqrt">√z</button>
                  <button class="key trig-key" data-func="sin">sin(z)</button>
                  <button class="key trig-key" data-func="cos">cos(z)</button>
                  <button class="key trig-key" data-func="tan">tan(z)</button>
+                 
                  <button class="key trig-key" data-func="sinh">sinh(z)</button>
                  <button class="key trig-key" data-func="sinc">sinc(z)</button>
-                 
                  <button class="key function" data-func="log">log(z)</button>
                  <button class="key function" data-func="exp">eᶻ</button>
+
                  <button class="key function" data-func="gamma" title="Gamma-funktio">Γ(z)</button>
                  <button class="key function" data-func="zeta" title="Riemannin zeeta-funktio">ζ(z)</button>
-                 <button class="key function" id="coords-clear" style="grid-column: span 5;">C</button>
+                 <button class="key" disabled></button>
+                 <button class="key" disabled></button>
+
+                 <button class="key function" id="coords-clear" style="grid-column: span 4;">C</button>
             </div>
             <div class="explanation-box">
                 <h4>Tietoa kuvaajista</h4>
@@ -461,29 +474,22 @@
             let scene, camera, renderer, controls, graphGroup;
 
             // Apufunktiot erikoisfunktioille
-            // Lanczos-approksimaatio Gamma-funktiolle (vain itseisarvo)
-            function logGamma(z) {
-                const g = 7;
-                const p = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
-                if (z < 0.5) return Math.log(Math.PI / (Math.sin(Math.PI * z) * Math.exp(logGamma(1 - z))));
-                z -= 1;
-                let x = p[0];
-                for (let i = 1; i < g + 2; i++) x += p[i] / (z + i);
-                let t = z + g + 0.5;
-                return Math.log(Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x);
-            }
             function absGamma(x, y) {
-                 const temp = (x - 0.5) * Math.log(x*x + y*y) - y * Math.atan2(y, x) + x - 0.5 * Math.log(2 * Math.PI);
-                 return Math.exp(temp);
+                 const z_re = x; const z_im = y;
+                 if (z_re < 0.5) {
+                    const sin_pi_z_re = Math.sin(Math.PI * z_re) * Math.cosh(Math.PI * z_im);
+                    const cos_pi_z_re = Math.cos(Math.PI * z_re) * Math.sinh(Math.PI * z_im);
+                    const denom = sin_pi_z_re*sin_pi_z_re + cos_pi_z_re*cos_pi_z_re;
+                    return Math.PI / (Math.sqrt(denom) * absGamma(1 - z_re, -z_im));
+                 }
+                 const log_gamma_re = (z_re - 0.5) * Math.log(z_re*z_re + z_im*z_im) - z_im * Math.atan2(z_im, z_re) + z_re - 0.5 * Math.log(2 * Math.PI);
+                 return Math.exp(log_gamma_re);
             }
-            
-            // Riemannin Zeeta-funktion reaaliosan approksimaatio summalla
-            function realZeta(x, y, terms = 50) {
+            function realZeta(x, y, terms = 40) {
                 let sum = 0;
                 for (let n = 1; n <= terms; n++) {
                     const n_x = Math.pow(n, -x);
-                    const term = n_x * Math.cos(y * Math.log(n));
-                    sum += term;
+                    sum += n_x * Math.cos(y * Math.log(n));
                 }
                 return sum;
             }
@@ -503,10 +509,10 @@
 
                 if (funcType === 'power') {
                     switch (power) {
-                        case 2: displayString = "y = Re(z²)"; surfaceFunction = (x, z) => (x * x) - (z * z); break;
-                        case 3: displayString = "y = Re(z³)"; surfaceFunction = (x, z) => (x * x * x) - (3 * x * z * z); break;
-                        case 4: displayString = "y = Re(z⁴)"; surfaceFunction = (x, z) => Math.pow(x, 4) - (6 * x * x * z * z) + Math.pow(z, 4); break;
-                        case 5: displayString = "y = Re(z⁵)"; surfaceFunction = (x, z) => Math.pow(x, 5) - (10 * Math.pow(x, 3) * z * z) + (5 * x * Math.pow(z, 4)); break;
+                        case 2: displayString = "y = Re(z^Ʌ)"; surfaceFunction = (x, z) => (x * x) - (z * z); break;
+                        case 3: displayString = "y = Re(z^ሐ)"; surfaceFunction = (x, z) => (x * x * x) - (3 * x * z * z); break;
+                        case 4: displayString = "y = Re(z^𐤄)"; surfaceFunction = (x, z) => Math.pow(x, 4) - (6 * x * x * z * z) + Math.pow(z, 4); break;
+                        case 5: displayString = "y = Re(z^¬)"; surfaceFunction = (x, z) => Math.pow(x, 5) - (10 * Math.pow(x, 3) * z * z) + (5 * x * Math.pow(z, 4)); break;
                     }
                 } else {
                     switch (funcType) {
