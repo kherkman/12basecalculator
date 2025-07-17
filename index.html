@@ -1,3 +1,4 @@
+Generated html
 <!DOCTYPE html>
 <html lang="fi">
 <head>
@@ -338,7 +339,13 @@
                  <button class="key power-key" data-power="2">x²</button>
                  <button class="key power-key" data-power="3">x³</button>
                  <button class="key power-key" data-power="4">x⁴</button>
-                 <button class="key function" id="coords-clear">C</button>
+                 <button class="key power-key" data-power="5">x⁵</button>
+                 <button class="key trig-key" data-func="sin">sin(x)</button>
+                 <button class="key trig-key" data-func="cos">cos(x)</button>
+                 <button class="key trig-key" data-func="tan">tan(x)</button>
+                 <button class="key function" data-func="log">log(x)</button>
+                 <button class="key function" data-func="exp">eˣ</button>
+                 <button class="key function" id="coords-clear" style="grid-column: span 3;">C</button>
             </div>
         </div>
 
@@ -466,29 +473,68 @@
             generateTables();
 
             // --- KOORDINAATISTO ---
-            const coordsCanvas = document.getElementById('coords-canvas'); const coordsDisplay = document.getElementById('coords-display'); const coordsKeys = document.getElementById('coords-keys');
+            const coordsCanvas = document.getElementById('coords-canvas');
+            const coordsDisplay = document.getElementById('coords-display');
+            const coordsKeys = document.getElementById('coords-keys');
             let scene, camera, renderer, controls, graphGroup;
             function setup3DScene() { scene = new THREE.Scene(); graphGroup = new THREE.Group(); scene.add(graphGroup); camera = new THREE.PerspectiveCamera(75, coordsCanvas.clientWidth / coordsCanvas.clientHeight, 0.1, 1000); renderer = new THREE.WebGLRenderer({ canvas: coordsCanvas, antialias: true }); renderer.setSize(coordsCanvas.clientWidth, coordsCanvas.clientHeight); controls = new OrbitControls(camera, renderer.domElement); camera.position.set(10, 10, 20); controls.update(); const axesHelper = new THREE.AxesHelper(15); scene.add(axesHelper); animate3DScene(); }
             function animate3DScene() { requestAnimationFrame(animate3DScene); controls.update(); renderer.render(scene, camera); }
-            function plotGraph(power) {
+            function plotGraph(funcType, power = null) {
                 graphGroup.clear();
-                const points = [];
                 const range = 12;
-                const segments = 100;
+                const segments = 200;
+                let displayString = '';
+                let currentPoints = [];
+
                 for (let i = 0; i <= segments; i++) {
                     const x = (i / segments) * (range * 2) - range;
-                    const y = Math.pow(x, power);
-                    if(Math.abs(y) < 50) { // Estä äärimmäisen suuret arvot
-                        points.push(new THREE.Vector3(x, y, 0));
+                    let y;
+
+                    switch (funcType) {
+                        case 'power': displayString = `y = x^${power}`; y = Math.pow(x, power); break;
+                        case 'sin': displayString = 'y = sin(x)'; y = Math.sin(x); break;
+                        case 'cos': displayString = 'y = cos(x)'; y = Math.cos(x); break;
+                        case 'tan': displayString = 'y = tan(x)'; y = Math.abs(Math.cos(x)) < 0.05 ? NaN : Math.tan(x); break;
+                        case 'log': displayString = 'y = log(x)'; y = x > 0 ? Math.log(x) : NaN; break;
+                        case 'exp': displayString = 'y = e^x'; y = Math.exp(x); break;
+                        default: y = NaN;
+                    }
+
+                    if (isNaN(y) || Math.abs(y) > 50) {
+                        if (currentPoints.length > 1) {
+                            const geometry = new THREE.BufferGeometry().setFromPoints(currentPoints);
+                            const material = new THREE.LineBasicMaterial({ color: 0xff00ff });
+                            graphGroup.add(new THREE.Line(geometry, material));
+                        }
+                        currentPoints = [];
+                    } else {
+                        currentPoints.push(new THREE.Vector3(x, y, 0));
                     }
                 }
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const material = new THREE.LineBasicMaterial({ color: 0xff00ff });
-                const line = new THREE.Line(geometry, material);
-                graphGroup.add(line);
-                coordsDisplay.textContent = `y = x^${power}`;
+
+                if (currentPoints.length > 1) {
+                    const geometry = new THREE.BufferGeometry().setFromPoints(currentPoints);
+                    const material = new THREE.LineBasicMaterial({ color: 0xff00ff });
+                    graphGroup.add(new THREE.Line(geometry, material));
+                }
+                
+                coordsDisplay.textContent = displayString;
             }
-            coordsKeys.addEventListener('click', e => { const { target } = e; if (!target.matches('button')) return; const power = target.dataset.power; if (power) { plotGraph(parseInt(power)); } else if (target.id === 'coords-clear') { graphGroup.clear(); coordsDisplay.textContent = 'Valitse funktio'; } });
+            coordsKeys.addEventListener('click', e => {
+                const { target } = e;
+                if (!target.matches('button:not(:disabled)')) return;
+                const power = target.dataset.power;
+                const func = target.dataset.func;
+
+                if (power) {
+                    plotGraph('power', parseInt(power));
+                } else if (func) {
+                    plotGraph(func);
+                } else if (target.id === 'coords-clear') {
+                    graphGroup.clear();
+                    coordsDisplay.textContent = 'Valitse funktio';
+                }
+            });
 
             // Alusta oletusnäkymä
             switchView('calc');
